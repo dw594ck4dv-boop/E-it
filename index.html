@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EĞİT AKADEMİ TARİH ÇIKMIŞ SORULAR</title>
+    <style>
+        body { background-color: #f7f9fc; font-family: 'Inter', 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; margin: 0; padding: 20px; color: #333; }
+        #quiz-container { background: #ffffff; padding: 2.5rem; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.06); width: 100%; max-width: 700px; box-sizing: border-box; }
+        #video-title-container { border-bottom: 2px solid #e0e6ed; padding-bottom: 1rem; margin-bottom: 1.5rem; text-align: center; }
+        .video-title { color: #1565c0; font-size: 1.25rem; font-weight: 700; margin: 0; text-transform: uppercase; }
+        #stats-bar { background-color: #f0f4f8; border-radius: 8px; padding: 0.8rem; display: flex; justify-content: space-around; margin-bottom: 2rem; border: 1px solid #d1d9e3; }
+        .stat-item { color: #1e3a8a; font-weight: 600; font-size: 0.95rem; }
+        .stat-value { color: #2563eb; }
+        .question-text { font-size: 1.15rem; font-weight: 600; color: #111827; margin-bottom: 1.5rem; line-height: 1.6; white-space: pre-wrap; border-left: 5px solid #1565c0; padding-left: 15px; }
+        .year-tag { color: #d97706; font-weight: 700; font-size: 0.9rem; margin-bottom: 5px; display: block; }
+        #options-container { margin-bottom: 1.5rem; }
+        .option { display: block; width: 100%; padding: 12px 15px; margin: 8px 0; border: 1px solid #d1d9e3; border-radius: 8px; cursor: pointer; transition: 0.2s; background: #fff; text-align: left; font-size: 1rem; color: #374151; }
+        .option:hover { background-color: #f3f4f6; }
+        .option.selected { background-color: #2563eb; color: white; font-weight: 600; }
+        #feedback-area { margin-top: 1.5rem; display: none; padding: 15px; border-radius: 6px; font-weight: 500; line-height: 1.4; }
+        .correct { background-color: #d1fae5; color: #065f46; }
+        .wrong { background-color: #fee2e2; color: #991b1b; }
+        #control-btns { margin-top: 1.5rem; text-align: center; }
+        #check-btn, #next-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 1rem; text-transform: uppercase; }
+        #check-btn { background-color: #10b981; color: white; }
+        #next-btn { background-color: #1565c0; color: white; display: none; }
+    </style>
+</head>
+<body>
+<div id="quiz-container">
+    <div id="video-title-container"><h1 class="video-title">EĞİT AKADEMİ TARİH ÇIKMIŞ SORULAR</h1></div>
+    <div id="stats-bar">
+        <div class="stat-item">Soru: <span id="current-q-count" class="stat-value">1</span> / <span id="total-q-count" class="stat-value">267</span></div>
+        <div class="stat-item">Hata: <span id="hata-count" class="stat-value">0</span></div>
+    </div>
+    <div id="question-area">
+        <span id="year-info" class="year-tag"></span>
+        <p id="question-text" class="question-text"></p>
+        <div id="options-container"></div>
+    </div>
+    <div id="feedback-area"></div>
+    <div id="control-btns">
+        <button id="check-btn" onclick="checkAnswer()">CEVABI KONTROL ET</button>
+        <button id="next-btn" onclick="nextQuestion()">İLERLE</button>
+    </div>
+</div>
+<script>
+    const questionsList = [
+        { 
+            y: "kpss-2026",
+            q: "tarihe nasıl çalışılır", 
+            a: ["yazarak", "dershaneye giderek", "eğit akademi", "youtube", "saatlerce çalışma"], 
+            correct: 2, 
+            reason: "sistem basit." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "İslamiyet öncesi Türk devletlerinde kurultay (toy) üyelerine ne ad verilir?", 
+            a: ["Toygun", "Tigin", "Şad", "Yarlığ", "Apa"], 
+            correct: 0, 
+            reason: "Toygun, kurultaya katılma hakkı olan üyelerin genel adıdır." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "Aşağıdakilerden hangisi Uygurların yerleşik hayata geçmesinin sonuçlarından biri değildir?", 
+            a: ["Mimari eserlerin verilmesi", "Savaşçılık özelliklerinin gelişmesi", "Tarımın başlaması", "Kütüphanecilik faaliyetleri", "Şehir kültürünün oluşması"], 
+            correct: 1, 
+            reason: "Yerleşik hayat ve Maniheizm etkisiyle Uygurların savaşçılık özellikleri tam tersine azalmıştır." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "Osmanlı Devleti'nde padişahın mutlak vekili olan ve mührünü taşıyan görevli aşağıdakilerden hangisidir?", 
+            a: ["Kazasker", "Defterdar", "Sadrazam", "Nişancı", "Şeyhülislam"], 
+            correct: 2, 
+            reason: "Sadrazam (Vezir-i Azam) padişahın mutlak vekilidir ve mühr-ü hümayunu taşır." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "I. Batum\nII. Musul\nIII. Hatay\n\nYukarıdakilerden hangileri Sakarya Meydan Muharebesi sonucunda imzalanan Ankara Antlaşması ile TBMM sınırları dışında kalmıştır?", 
+            a: ["Yalnız I", "Yalnız III", "I ve II", "I ve III", "II ve III"], 
+            correct: 1, 
+            reason: "1921 Ankara Antlaşması ile Hatay, Misak-ı Milli sınırları dışında kalmıştır (Batum Moskova ile, Musul 1926 Ankara ile)." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Lozan Barış Konferansı'nda Türkiye'yi temsil eden heyetin başkanlığını kim yapmıştır?", 
+            a: ["Rauf Orbay", "İsmet İnönü", "Fevzi Çakmak", "Kazım Karabekir", "Ali Fethi Okyar"], 
+            correct: 1, 
+            reason: "Dışişleri Bakanı sıfatıyla İsmet İnönü heyet başkanı olarak katılmıştır." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "Osmanlı Devleti'nde gelirleri doğrudan devlet hazinesine aktarılan toprak türü hangisidir?", 
+            a: ["Mülk", "Dirlik", "Mukataa", "Paşmaklık", "Malikane"], 
+            correct: 2, 
+            reason: "Mukataa toprakların geliri iltizam sistemiyle doğrudan hazineye gider." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "Mustafa Kemal'in 'Ordular, ilk hedefiniz Akdeniz'dir. İleri!' emrini verdiği savaş hangisidir?", 
+            a: ["I. İnönü", "Sakarya", "Büyük Taarruz", "Kütahya-Eskişehir", "Çanakkale"], 
+            correct: 2, 
+            reason: "Bu tarihi emir Dumlupınar (Büyük Taarruz) sırasında verilmiştir." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Türk tarihinde 'Sultan' unvanını kullanan ilk hükümdar kimdir?", 
+            a: ["Gazneli Mahmut", "Alp Arslan", "Tuğrul Bey", "Melihşah", "Satuk Buğra Han"], 
+            correct: 0, 
+            reason: "Gazneli Mahmut, Abbasi halifesini koruduğu için 'Sultan' unvanını alan ilk Türk hükümdardır." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Aşağıdakilerden hangisi 1924 Anayasası'nda 1928 yılında yapılan değişikliklerden biridir?", 
+            a: ["Kadınlara seçme hakkı verilmesi", "Anayasa Mahkemesinin kurulması", "'Devletin dini İslam'dır' ibaresinin çıkarılması", "Çok partili hayata geçilmesi", "Atatürk ilkelerinin anayasaya girmesi"], 
+            correct: 2, 
+            reason: "1928 yılında laikleşme adımı olarak devletin dini ibaresi anayasadan çıkarılmıştır." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "Osmanlı Devleti'nde 'Ekber ve Erşed' sistemini getirerek veraset sistemine son şeklini veren padişah hangisidir?", 
+            a: ["Fatih Sultan Mehmet", "I. Ahmed", "II. Mahmut", "IV. Murad", "Kanuni Sultan Süleyman"], 
+            correct: 1, 
+            reason: "I. Ahmed döneminde taht kavgalarını önlemek için en yaşlı ve olgun üyenin başa geçmesi kuralı getirilmiştir." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "Aşağıdakilerden hangisi Balkan Antantı'na katılan devletlerden biri değildir?", 
+            a: ["Türkiye", "Yugoslavya", "Yunanistan", "Romanya", "Bulgaristan"], 
+            correct: 4, 
+            reason: "Bulgaristan ve Arnavutluk Balkan Antantı'na katılmamıştır." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "Mustafa Kemal Atatürk'ün nüfusa kayıtlı olduğu il hangisidir?", 
+            a: ["Selanik", "Ankara", "İstanbul", "Gaziantep", "Manastır"], 
+            correct: 3, 
+            reason: "Atatürk, Gaziantep Bey Mahallesi nüfusuna kayıtlıdır." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "Türkiye'nin Milletler Cemiyeti'ne üye olduğu yıl hangisidir?", 
+            a: ["1923", "1930", "1932", "1934", "1936"], 
+            correct: 2, 
+            reason: "Türkiye, dünya barışına katkı için 1932 yılında cemiyete davet üzerine üye olmuştur." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "I. Gümrü\nII. Moskova\nIII. Kars\n\nYukarıdaki antlaşmalardan hangileri Doğu sınırımızın kesinleşmesinde etkili olmuştur?", 
+            a: ["Yalnız I", "Yalnız II", "I ve II", "I, II ve III", "II ve III"], 
+            correct: 3, 
+            reason: "Gümrü, Moskova ve Kars antlaşmalarının tamamı Doğu sınırı sürecidir. Kars Antlaşması ile sınır kesinleşmiştir." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "Osmanlı Devleti'nde ilk kez Batılı tarzda askeri ıslahat yapan padişah hangisidir?", 
+            a: ["III. Selim", "I. Mahmut", "III. Ahmed", "II. Mahmut", "I. Abdülhamid"], 
+            correct: 1, 
+            reason: "I. Mahmut döneminde Hendesehane açılarak ilk kez Batılı askeri teknikler uygulanmıştır." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Aşağıdakilerden hangisi Atatürk döneminde açılan kurumlardan biri değildir?", 
+            a: ["Türk Tarih Kurumu", "Halkevleri", "Köy Enstitüleri", "Dil ve Tarih-Coğrafya Fakültesi", "Ankara Hukuk Mektebi"], 
+            correct: 2, 
+            reason: "Köy Enstitüleri 1940 yılında (İsmet İnönü dönemi) açılmıştır." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Kırım hangi antlaşma ile Rusya'ya ait olduğu kabul edilmiştir?", 
+            a: ["Küçük Kaynarca", "Aynalıkavak", "Yaş", "Bükreş", "Edirne"], 
+            correct: 2, 
+            reason: "Yaş Antlaşması (1792) ile Kırım'ın Rusya'ya ait olduğu kesinleşmiştir." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Milli Mücadele'nin gerekçesi, yöntemi ve amacı ilk kez nerede belirtilmiştir?", 
+            a: ["Amasya Genelgesi", "Erzurum Kongresi", "Sivas Kongresi", "Havza Genelgesi", "Misak-ı Milli"], 
+            correct: 0, 
+            reason: "Amasya Genelgesi ihtilal beyannamesi niteliğindedir." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Hangi olay sonrasında 'Ordunun siyasetten ayrılması' fikri güçlenmiş ve kanunlaşmıştır?", 
+            a: ["31 Mart Olayı", "Balkan Savaşları", "I. Dünya Savaşı", "Sakarya Meydan Muharebesi", "Menemen Olayı"], 
+            correct: 1, 
+            reason: "Balkan Savaşları'ndaki büyük yenilginin sebebi ordunun siyasete karışması olarak görülmüştür." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "Eski Türklerde 'balbal' denilen mezar taşları neyin göstergesidir?", 
+            a: ["Sanatın geliştiğinin", "Ahiret inancının", "Yerleşik hayatın", "Siyasi birliğin", "Tarımın yapıldığının"], 
+            correct: 1, 
+            reason: "Öldürülen düşman sayısı kadar dikilen bu taşlar ahiret inancını yansıtır." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "Aşağıdakilerden hangisi Lozan'da çözülemeyip sonraya bırakılan tek sorundur?", 
+            a: ["Boğazlar", "Kapitülasyonlar", "Musul (Irak Sınırı)", "Dış Borçlar", "Ermeni Meselesi"], 
+            correct: 2, 
+            reason: "Irak sınırı İngiltere ile ikili görüşmelere bırakılmış, 1926 Ankara Antlaşması ile çözülmüştür." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "I. Terakkiperver Cumhuriyet Fırkası\nII. Serbest Cumhuriyet Fırkası\nIII. Demokrat Parti\n\nYukarıdakilerden hangileri Atatürk döneminde kurulmuştur?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 1, 
+            reason: "Demokrat Parti 1946'da kurulmuştur." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "Osmanlı Devleti'nde 'Şer'i' davalara bakan ve eğitim işlerinden sorumlu olan Divan üyesi kimdir?", 
+            a: ["Şeyhülislam", "Kazasker", "Nişancı", "Sadrazam", "Reisülküttab"], 
+            correct: 1, 
+            reason: "Kazasker, adalet ve eğitim (müderris atamaları) işlerinden sorumludur." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "Temsil Heyeti'nin tüm yurdu temsil eder hale geldiği kongre hangisidir?", 
+            a: ["Amasya", "Erzurum", "Sivas", "Balıkesir", "Alaşehir"], 
+            correct: 2, 
+            reason: "Sivas Kongresi'nde cemiyetler birleşmiş ve Temsil Heyeti ulusal hale gelmiştir." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "Kabotaj Kanunu hangi ilkeyle doğrudan ilgilidir?", 
+            a: ["Laiklik", "Milliyetçilik", "Devletçilik", "Cumhuriyetçilik", "İnkılapçılık"], 
+            correct: 1, 
+            reason: "Denizlerde bağımsızlık ve Türk egemenliği milliyetçilik ilkesidir." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "Aşağıdakilerden hangisi I. Balkan Savaşı'ndan sonra Osmanlı Devleti'nden ayrılarak bağımsızlığını ilan eden son Balkan devletidir?", 
+            a: ["Bulgaristan", "Sırbistan", "Yunanistan", "Arnavutluk", "Karadağ"], 
+            correct: 3, 
+            reason: "1912'de Arnavutluk, Osmanlı'dan ayrılan son Balkan devletidir." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "Osmanlı Devleti'nde 'Padişahın yetkilerini kısıtlayan' ilk belge hangisidir?", 
+            a: ["Sened-i İttifak", "Tanzimat Fermanı", "Islahat Fermanı", "Kanun-i Esasi", "Teşkilat-ı Esasiye"], 
+            correct: 0, 
+            reason: "1808 Sened-i İttifak ile padişahın yetkileri ilk kez ayanlar karşısında kısıtlanmıştır." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "Sivas Kongresi'nde 'İrade-i Milliye' adıyla bir gazetenin çıkarılmasına karar verilmesinin temel amacı nedir?", 
+            a: ["Yeni bir devlet kurmak", "Milli Mücadele'nin haklılığını ve kararlarını halka duyurmak", "Halkı askere çağırmak", "İstanbul Hükümeti'ni desteklemek", "Padişahın emirlerini yaymak"], 
+            correct: 1, 
+            reason: "Milli Mücadele'nin propaganda ve bilgilendirme ihtiyacını karşılamak için çıkarılmıştır." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "I. Batı Anadolu\nII. Güney Anadolu\nIII. Doğu Anadolu\n\nKuvayımilliye birlikleri yukarıdaki bölgelerin hangilerinde işgalcilere karşı direniş göstermiştir?", 
+            a: ["Yalnız I", "Yalnız II", "I ve II", "I ve III", "I, II ve III"], 
+            correct: 2, 
+            reason: "Kuvayımilliye Batı (Yunan) ve Güney (Fransız) cephelerinde etkindir. Doğu'da düzenli ordu (15. Kolordu) vardır." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "Lozan Antlaşması'na göre 'Boğazlar'ın yönetimi nasıl belirlenmiştir?", 
+            a: ["Tamamen Türkiye'ye bırakılmıştır", "İngiliz denetimine verilmiştir", "Başkanı Türk olan uluslararası bir komisyona bırakılmıştır", "Rusya ile ortak yönetilecektir", "Süresiz olarak askerden arındırılmıştır"], 
+            correct: 2, 
+            reason: "Lozan'da Boğazlar Komisyonu kurulmuş, başkanlığı Türkiye'ye verilmiştir (1936 Montrö ile bu komisyon kalkacaktır)." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "Osmanlı Devleti'nde 'Toprak mülkiyetinin devlete ait olması' aşağıdakilerden hangisini engellemiştir?", 
+            a: ["Tarımın yapılmasını", "Güçlü bir feodal yapının (derebeylik) oluşmasını", "Vergi toplanmasını", "Asker yetiştirilmesini", "Göçebe yaşamı"], 
+            correct: 1, 
+            reason: "Mülkiyet devlette olduğu için kişilerin toprak üzerinden siyasi güç kazanması ve derebeyleşmesi engellenmiştir." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Mustafa Kemal Atatürk'ün 'Şam'da' kurduğu cemiyet hangisidir?", 
+            a: ["İttihat ve Terakki", "Vatan ve Hürriyet", "Hürriyet ve İtilaf", "Müdafaa-i Hukuk", "Karakol Cemiyeti"], 
+            correct: 1, 
+            reason: "1905 yılında ilk görev yeri olan Şam'da Vatan ve Hürriyet Cemiyeti'ni kurmuştur." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Aşağıdakilerden hangisi Cumhuriyetçilik ilkesinin doğal bir sonucudur?", 
+            a: ["Devletçilik", "Milli Egemenlik", "Laiklik", "Gelenekçilik", "Dini yönetim"], 
+            correct: 1, 
+            reason: "Cumhuriyet, halkın kendi kendini yönetmesi yani milli egemenlik demektir." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "I. Dünya Savaşı'nda Osmanlı Devleti'nin 'Kutsal Cihad' ilan etmesine rağmen Arapların İngilizlerle iş birliği yapması hangi akımın zayıfladığını gösterir?", 
+            a: ["Türkçülük", "Batıcılık", "İslamcılık (Ümmetçilik)", "Osmanlıcılık", "Adem-i Merkeziyetçilik"], 
+            correct: 2, 
+            reason: "Müslüman Arapların Halife'ye karşı İngilizlerle hareket etmesi İslamcılık politikasının iflas ettiğini gösterir." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "Osmanlı Devleti'nde ilk matbaa hangi dönemde açılmıştır?", 
+            a: ["Lale Devri", "Tanzimat Dönemi", "II. Mahmut Dönemi", "I. Meşrutiyet", "Duraklama Dönemi"], 
+            correct: 0, 
+            reason: "1727 yılında Lale Devri'nde İbrahim Müteferrika ve Sait Efendi tarafından kurulmuştur." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "Erzurum Kongresi'nde alınan 'Manda ve himaye kabul olunamaz' kararı aşağıdakilerden hangisine önem verildiğini gösterir?", 
+            a: ["Laikliğe", "Milli Bağımsızlığa", "Eğitimin modernleşmesine", "Ekonomik devletçiliğe", "Azınlık haklarına"], 
+            correct: 1, 
+            reason: "Manda ve himayenin reddi, tam bağımsızlık ilkesinin kesin savunulmasıdır." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "TBMM Hükümeti'nin kazandığı ilk askeri ve siyasi başarı hangisidir?", 
+            a: ["I. İnönü Zaferi", "Gümrü Antlaşması", "Sakarya Meydan Muharebesi", "Ankara Antlaşması", "Mudanya Ateşkesi"], 
+            correct: 1, 
+            reason: "Ermenilere karşı kazanılan zafer ve Gümrü Antlaşması, TBMM'nin ilk başarısıdır." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Osmanlı Devleti'nde 'Dikey Hareketlilik' (Sınıflar arası geçiş) nasıl mümkün olmaktadır?", 
+            a: ["Sadece soylu olmakla", "Eğitim ve liyakatle (Reaya'dan askeri sınıfa geçiş)", "Zengin olmakla", "Toprak sahibi olmakla", "Babadan oğula geçişle"], 
+            correct: 1, 
+            reason: "Osmanlı'da yetenekli ve eğitimli kişiler yönetilen (reaya) sınıftan yöneten (askeri) sınıfa geçebilirdi." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Halifeliğin kaldırılmasının (3 Mart 1924) en önemli nedeni aşağıdakilerden hangisidir?", 
+            a: ["Ekonomiyi düzeltmek", "Laiklik ve milli egemenliği tam anlamıyla gerçekleştirmek", "Eğitimi birleştirmek", "Sınırları korumak", "Dış borçları ödemek"], 
+            correct: 1, 
+            reason: "Halifelik makamı, cumhuriyet rejimi ve laiklik ilkesiyle bağdaşmadığı için kaldırılmıştır." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "Osmanlı Devleti'nde ordu komutanı olarak sefere çıkan Sadrazamlara verilen unvan nedir?", 
+            a: ["Kaptan-ı Derya", "Serdar-ı Ekrem", "Kazasker", "Nişancı", "Mirliva"], 
+            correct: 1, 
+            reason: "Padişah sefere gitmediğinde Sadrazam 'Serdar-ı Ekrem' unvanıyla orduya komuta ederdi." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "Mudanya Ateşkes Antlaşması ile savaş yapılmadan kurtarılan yerler hangileridir?", 
+            a: ["İzmir - Aydın", "Doğu Trakya - İstanbul - Boğazlar", "Ankara - Eskişehir", "Hatay - Musul", "Bursa - Balıkesir"], 
+            correct: 1, 
+            reason: "Mudanya ile İstanbul, Boğazlar ve Doğu Trakya savaşsız teslim alınmıştır." 
+        },
+        { 
+            y: "2002 - KPSS",
+            q: "Atatürk ilkeleri hangi yıl anayasaya girmiştir?", 
+            a: ["1924", "1928", "1934", "1937", "1945"], 
+            correct: 3, 
+            reason: "1924 Anayasası'nda yapılan 1937 değişikliği ile 6 temel ilke anayasaya eklenmiştir." 
+        },
+        { 
+            y: "2002 - KPSS",
+            q: "Aşağıdakilerden hangisi İnkılapçılık ilkesinin temel amacıdır?", 
+            a: ["Gelenekleri korumak", "Sürekli çağdaşlaşma ve yenilenme", "Sınıf ayrımı yaratmak", "Eski kurumları onarmak", "Dini eğitimi artırmak"], 
+            correct: 1, 
+            reason: "İnkılapçılık, statik olmayı reddeder; çağın gerisinde kalan kurumların yerine modern olanın getirilmesini savunur." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "Aşağıdakilerden hangisi Büyük Selçuklu Devleti'nin yıkılmasında etkili olan iç sebeplerden biridir?", 
+            a: ["Haçlı Seferleri", "Batinilik faaliyetleri", "Katvan Savaşı", "Bizans baskısı", "Moğol istilası"], 
+            correct: 1, 
+            reason: "Hasan Sabbah önderliğindeki Batinilik hareketleri içeriden yıkıcı etki yapmıştır." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "Osmanlı Devleti'nde Tanzimat Fermanı'nın ilan edilmesinde etkili olan dış gelişme hangisidir?", 
+            a: ["Mısır Meselesi (Kavalalı Mehmet Ali Paşa)", "Kırım Savaşı", "Yunan İsyanı", "93 Harbi", "Balkan Savaşları"], 
+            correct: 0, 
+            reason: "Mısır meselesinde Avrupa desteğini almak için Tanzimat Fermanı ilan edilmiştir." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Mustafa Kemal'in 'Benim şahsi meselem' dediği dış politika sorunu hangisidir?", 
+            a: ["Boğazlar", "Nüfus Mübadelesi", "Hatay", "Musul", "Dış Borçlar"], 
+            correct: 2, 
+            reason: "Atatürk, hastalığına rağmen Hatay'ın ana vatana katılması için büyük çaba harcamıştır." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Türk Medeni Kanunu'nun (1926) kabulüyle aşağıdakilerden hangisi sağlanmıştır?", 
+            a: ["Kadınlara seçme ve seçilme hakkı", "Tek eşli evlilik ve resmi nikah zorunluluğu", "Kadınların askere alınması", "Saltanatın kaldırılması", "Şer'i hukuk sisteminin güçlenmesi"], 
+            correct: 1, 
+            reason: "Medeni Kanun toplumsal ve ailevi hakları düzenlemiş; kadın-erkek eşitliğini sağlamıştır (Siyasi haklar daha sonradır)." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "I. Balkan Savaşı sonucunda Osmanlı Devleti'nin Batı sınırı neresi olmuştur?", 
+            a: ["Meriç Nehri", "Midye-Enez Hattı", "Sakarya Nehri", "Çatalca", "Edirne"], 
+            correct: 1, 
+            reason: "Londra Antlaşması ile Osmanlı Midye-Enez hattının batısındaki tüm toprakları kaybetmiştir." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Osmanlı Devleti'nde 'Vakıf' sisteminin temel amacı aşağıdakilerden hangisidir?", 
+            a: ["Orduyu finanse etmek", "Sosyal ve dini ihtiyaçları karşılamak, hayır işlerini düzenlemek", "Dış borçları ödemek", "Yeniçeri maaşlarını dağıtmak", "Toprakları satmak"], 
+            correct: 1, 
+            reason: "Vakıflar, kamu yararına hizmet vererek sosyal devlet anlayışını desteklemiştir." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "Mustafa Kemal'in Milli Mücadele'yi başlatmak amacıyla Anadolu'ya geçtiği resmi görev nedir?", 
+            a: ["Başkomutanlık", "9. Ordu Müfettişliği", "Harbiye Nazırlığı", "Temsil Heyeti Başkanlığı", "Valilik"], 
+            correct: 1, 
+            reason: "Atatürk, resmi olarak 9. Ordu (sonradan 3. Ordu) Müfettişi sıfatıyla Samsun'a gönderilmiştir." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "Aşağıdakilerden hangisi I. Dünya Savaşı sırasında imzalanan gizli antlaşmalardan biri değildir?", 
+            a: ["Sykes-Picot", "MacMahon", "Petrograd Protokolü", "Brest-Litovsk", "Saint-Jean-de-Maurienne"], 
+            correct: 3, 
+            reason: "Brest-Litovsk gizli bir antlaşma değil, Rusya'nın savaştan çekildiği resmi barış antlaşmasıdır." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "Osmanlı Devleti'nde 'Şehzadelerin sancağa çıkma' usulünü kaldıran ve 'Kafes' sistemini getiren padişah hangisidir?", 
+            a: ["III. Mehmet", "I. Ahmed", "IV. Murad", "II. Osman", "I. Mustafa"], 
+            correct: 0, 
+            reason: "Sancağa çıkma usulünü kaldıran III. Mehmet'tir. Kafes sistemini başlatan ise I. Ahmed'dir (Veraset değişikliği ile)." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Milli Mücadele döneminde Batı Cephesi'nde Yunanlılara karşı kazanılan ilk zafer hangisidir?", 
+            a: ["I. İnönü", "II. İnönü", "Kütahya-Eskişehir", "Sakarya", "Büyük Taarruz"], 
+            correct: 0, 
+            reason: "Düzenli ordunun Batı Cephesi'ndeki ilk sınavı ve zaferi I. İnönü Savaşı'dır." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Osmanlı Devleti'nde 'İltizam' sisteminin kaldırılmasıyla vergi toplama işini üstlenen görevli hangisidir?", 
+            a: ["Mütesellim", "Muhassıl", "Mültezim", "Voyvoda", "Zabtiye"], 
+            correct: 1, 
+            reason: "Tanzimat döneminde iltizam kaldırılınca vergi toplama işi Muhassıllara verilmiştir." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "I. İzmir İktisat Kongresi\nII. Kabotaj Kanunu\nIII. Teşvik-i Sanayi Kanunu\n\nYukarıdakilerden hangileri doğrudan ekonomik bağımsızlığı sağlamaya yöneliktir?", 
+            a: ["Yalnız I", "Yalnız II", "I ve II", "II ve III", "I, II ve III"], 
+            correct: 2, 
+            reason: "İktisat Kongresi ve Kabotaj milli ekonomi ve bağımsızlığı hedefler (Teşvik-i Sanayi ise yerli üretimi destekler)." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "Atatürk'ün 'Medeni bilgiler' kitabını kaleme alırken en çok üzerinde durduğu ilke hangisidir?", 
+            a: ["Devletçilik", "Laiklik", "Cumhuriyetçilik", "Milliyetçilik", "İnkılapçılık"], 
+            correct: 2, 
+            reason: "Medeni Bilgiler kitabı vatandaşlık hakları ve cumhuriyet yönetimini temel alır." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "Aşağıdakilerden hangisi Büyük Selçuklu Devleti'nde eğitim kurumlarına verilen genel addır?", 
+            a: ["Sıbyan", "Medrese (Nizamiye)", "Enderun", "Darülfünun", "İdadi"], 
+            correct: 1, 
+            reason: "Büyük Selçuklularda Nizamülmülk tarafından açılan Nizamiye Medreseleri ünlüdür." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "TBMM'nin 'Yürütme' yetkisini ilk kez kullandığı olay aşağıdakilerden hangisidir?", 
+            a: ["Hıyanet-i Vataniye Kanunu'nun çıkarılması", "Ali Fuat Paşa'nın Batı Cephesi Komutanlığı'na atanması", "İstiklal Mahkemeleri'nin kurulması", "Gümrü Antlaşması'nın imzalanması", "Teşkilat-ı Esasiye'nin kabulü"], 
+            correct: 1, 
+            reason: "Bir atama yapmak doğrudan yürütme yetkisinin kullanılmasıdır." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "Osmanlı Devleti'nde 'Lale Devri' hangi olayla sona ermiştir?", 
+            a: ["Patrona Halil İsyanı", "Kabakçı Mustafa İsyanı", "31 Mart Olayı", "Kuleli Vakası", "Bab-ı Ali Baskını"], 
+            correct: 0, 
+            reason: "1730 yılında çıkan Patrona Halil İsyanı ile Lale Devri son bulmuştur." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "Misak-ı Milli'de 'Referandum (Halk oylaması)' yapılması öngörülen yerler hangileridir?", 
+            a: ["İzmir - Manisa", "Kars - Ardahan - Batum - Batı Trakya", "Musul - Kerkük", "Hatay - Adana", "İstanbul - Boğazlar"], 
+            correct: 1, 
+            reason: "Elviye-i Selase (Kars, Ardahan, Batum) ve Batı Trakya için halk oylaması öngörülmüştür." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Sivas Kongresi'nde cemiyetlerin 'Anadolu ve Rumeli Müdafaa-i Hukuk Cemiyeti' adı altında birleştirilmesinin amacı nedir?", 
+            a: ["İstanbul Hükümeti ile uzlaşmak", "Milli Mücadele'yi tek elden ve merkezi bir yönetimle yürütmek", "Bölgesel kurtuluşu sağlamak", "Halifeliği korumak", "Yeni bir anayasa hazırlamak"], 
+            correct: 1, 
+            reason: "Dağınık haldeki direnişi tek merkezde toplayarak koordinasyonu sağlamak hedeflenmiştir." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "Osmanlı Devleti'nde ilk kağıt para hangi padişah döneminde basılmıştır?", 
+            a: ["II. Mahmut", "Abdülmecid", "Abdülaziz", "II. Abdülhamid", "V. Mehmet Reşad"], 
+            correct: 1, 
+            reason: "1840 yılında Sultan Abdülmecid döneminde 'Kaime' adıyla ilk kağıt para basılmıştır." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "Sakarya Meydan Muharebesi'nin sonuçları arasında hangisi yer almaz?", 
+            a: ["Kars Antlaşması'nın imzalanması", "Ankara Antlaşması'nın imzalanması", "İtalya'nın Anadolu'yu tamamen boşaltması", "Tekalif-i Milliye emirlerinin yayımlanması", "Mustafa Kemal'e Mareşallik rütbesi verilmesi"], 
+            correct: 3, 
+            reason: "Tekalif-i Milliye emirleri Sakarya'dan önce, Kütahya-Eskişehir yenilgisi sonrası yayımlanmıştır." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Türk Medeni Kanunu ile kadınlara verilen haklar arasında hangisi yoktur?", 
+            a: ["Miras eşitliği", "Boşanma hakkı", "Tanıklık eşitliği", "Milletvekili seçilme hakkı", "İstediği mesleğe girme hakkı"], 
+            correct: 3, 
+            reason: "Seçme ve seçilme hakkı siyasi bir haktır ve 1930-1934 yılları arasında verilmiştir (Medeni Kanun 1926)." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "Osmanlı Devleti'nde 'Reisülküttab'ın yetkilerinin artması hangi yüzyılda olmuştur?", 
+            a: ["16. Yüzyıl", "17. Yüzyıl", "18. Yüzyıl", "19. Yüzyıl", "20. Yüzyıl"], 
+            correct: 2, 
+            reason: "Diplomasinin önem kazanmasıyla 18. yüzyılda Reisülküttab (Dışişleri Bakanı) yetkileri artmıştır." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "Selçuklularda 'Atabey'lik kurumunun temel amacı nedir?", 
+            a: ["Devlet hazinesini yönetmek", "Şehzadeleri (Melikleri) devlet yönetimi ve askerlik konusunda eğitmek", "Sınır güvenliğini sağlamak", "Hukuk işlerini yürütmek", "Dini eğitimi yaymak"], 
+            correct: 1, 
+            reason: "Atabeyler, meliklerin hocası ve danışmanıdır." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "Osmanlı Devleti'nde 'Vaka-i Hayriye' olarak adlandırılan olay hangisidir?", 
+            a: ["Tanzimat Fermanı'nın ilanı", "Yeniçeri Ocağı'nın kaldırılması", "31 Mart Olayı'nın bastırılması", "Meşrutiyet'in ilanı", "İstanbul'un fethi"], 
+            correct: 1, 
+            reason: "1826 yılında II. Mahmut'un Yeniçeri Ocağı'nı kaldırması 'Hayırlı Olay' olarak bilinir." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Mustafa Kemal'in 'Siz orada sadece düşmanı değil, milletin makus talihini de yendiniz' dediği zafer hangisidir?", 
+            a: ["I. İnönü", "II. İnönü", "Sakarya", "Çanakkale", "Dumlupınar"], 
+            correct: 1, 
+            reason: "Bu söz İsmet Paşa'ya II. İnönü zaferi sonrası gönderilen telgraftadır." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "I. Şeyh Sait İsyanı\nII. Menemen Olayı\nIII. Dersim Olayları\n\nYukarıdakilerden hangileri doğrudan laik Cumhuriyet rejimini yıkmaya yönelik girişimlerdir?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 1, 
+            reason: "Şeyh Sait ve Menemen olayları rejim karşıtı dini nitelikli isyanlardır." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Osmanlı Devleti'nde 'Nişancı'nın görevleri arasında hangisi yoktur?", 
+            a: ["Padişahın tuğrasını çekmek", "Toprak (Tapu-Tahrir) kayıtlarını tutmak", "Divan kararlarını deftere geçirmek", "Ordunun maaşlarını dağıtmak", "Yabancı devletlerle yazışmaları düzenlemek"], 
+            correct: 3, 
+            reason: "Maaş (Ulufe) dağıtımı ve mali işler Defterdar'ın görevidir." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "TBMM'nin imzaladığı ilk uluslararası antlaşma hangisidir?", 
+            a: ["Moskova Antlaşması", "Gümrü Antlaşması", "Ankara Antlaşması", "Kars Antlaşması", "Londra Antlaşması"], 
+            correct: 1, 
+            reason: "3 Aralık 1920'de Ermenistan ile imzalanan Gümrü Antlaşması ilk siyasi başarıdır." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "Atatürk döneminde 'Eğitimde birliği' sağlayan kanun hangisidir?", 
+            a: ["Medeni Kanun", "Tevhid-i Tedrisat Kanunu", "Tekke ve Zaviyelerin Kapatılması", "Maarif Teşkilatı Hakkında Kanun", "Soyadı Kanunu"], 
+            correct: 1, 
+            reason: "3 Mart 1924 tarihli Tevhid-i Tedrisat ile tüm eğitim kurumları MEB'e bağlanmıştır." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "Kutü'l Amare zaferi I. Dünya Savaşı'nın hangi cephesinde kazanılmıştır?", 
+            a: ["Kafkas", "Kanal", "Irak", "Suriye", "Hicaz"], 
+            correct: 2, 
+            reason: "Irak Cephesi'nde İngiliz ordusunun tümen komutanı Townshend ile beraber esir alındığı zaferdir." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "I. Takvim-i Vekayi\nII. Tercüman-ı Ahval\nIII. İrade-i Milliye\n\nYukarıdaki yayın organlarından hangileri Osmanlı Devleti döneminde yayımlanmaya başlamıştır?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 1, 
+            reason: "Takvim-i Vekayi (ilk resmi) ve Tercüman-ı Ahval (ilk özel) Osmanlı'dır. İrade-i Milliye ise Milli Mücadele dönemidir." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Aşağıdakilerden hangisi Atatürk döneminde dış politikada yaşanan sorunlardan biri değildir?", 
+            a: ["Nüfus Mübadelesi", "Musul Sorunu", "Yabancı Okullar", "Kıbrıs Sorunu", "Hatay Meselesi"], 
+            correct: 3, 
+            reason: "Kıbrıs sorunu 1950'lerden sonra (Demokrat Parti dönemi) gündeme gelmiştir." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "Osmanlı Devleti'nde 'Salyaneli' (Yıllıklı) eyaletlerin temel özelliği aşağıdakilerden hangisidir?", 
+            a: ["Tımar sisteminin uygulanması", "İltizam sisteminin uygulanması ve vergilerin nakit toplanması", "Padişahın özel mülkü olması", "Sadece gayrimüslimlerin yaşaması", "Merkeze en yakın eyaletler olması"], 
+            correct: 1, 
+            reason: "Salyaneli eyaletler merkeze uzak olan ve vergisi iltizam yoluyla nakit alınan eyaletlerdir." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "I. Balkan Savaşı sırasında Osmanlı Devleti'nin içinde bulunduğu karışıklıktan yararlanarak bağımsızlığını ilan eden devlet hangisidir?", 
+            a: ["Bulgaristan", "Sırbistan", "Arnavutluk", "Karadağ", "Romanya"], 
+            correct: 2, 
+            reason: "Arnavutluk, 1912 yılında Osmanlı'dan ayrılarak bağımsızlığını ilan eden son Balkan devletidir." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "Milli Mücadele'de Batı Cephesi'nin komutası hangi olaydan sonra birleştirilerek İsmet Paşa'ya verilmiştir?", 
+            a: ["Gümrü Antlaşması", "Gediz Taarruzu'nun başarısız olması", "I. İnönü Zaferi", "Londra Konferansı", "Amasya Görüşmeleri"], 
+            correct: 1, 
+            reason: "Gediz'deki başarısızlık sonrası Ali Fuat Paşa görevden alınmış ve Batı Cephesi düzenli orduya geçişle birleştirilmiştir." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "Aşağıdakilerden hangisi 1923 yılında toplanan İzmir İktisat Kongresi'nde alınan kararlardan biridir?", 
+            a: ["Aşar vergisinin artırılması", "Yerli malı kullanımının teşvik edilmesi", "Yabancı sermayenin tamamen yasaklanması", "Beş yıllık kalkınma planının başlatılması", "Demir yollarının millileştirilmesi"], 
+            correct: 1, 
+            reason: "Misak-ı İktisadi kararlarıyla milli üretimin desteklenmesi ve yerli malı kullanımı hedeflenmiştir." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "Osmanlı Devleti'nde 'Şehremini'nin görevi nedir?", 
+            a: ["Ordunun lojistiğini sağlamak", "Belediye işlerini ve şehrin bayındırlık hizmetlerini yürütmek", "Sınır güvenliğini korumak", "Dış yazışmaları yönetmek", "Eğitim kurumlarını denetlemek"], 
+            correct: 1, 
+            reason: "Şehremini günümüzdeki belediye başkanı yetkilerine sahip görevlidir." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "I. Mudanya Ateşkesi\nII. Lozan Antlaşması\nIII. Montrö Boğazlar Sözleşmesi\n\nYukarıdaki gelişmelerden hangileri Boğazlar üzerinde Türk egemenliğini kısıtlayan maddeler içermektedir?", 
+            a: ["Yalnız I", "Yalnız II", "I ve II", "II ve III", "I, II ve III"], 
+            correct: 2, 
+            reason: "Mudanya ve Lozan'da Boğazlar komisyonu/askersiz bölge kuralı vardı. Montrö ile bu kısıtlamalar kalkmıştır." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Mustafa Kemal'in 'Anafartalar Kahramanı' olarak tanınmasını sağlayan cephe hangisidir?", 
+            a: ["Kafkas", "Çanakkale", "Suriye", "Trablusgarp", "Kanal"], 
+            correct: 1, 
+            reason: "Çanakkale Savaşları'ndaki üstün başarıları ona bu unvanı kazandırmıştır." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "Aşağıdakilerden hangisi Tanzimat Fermanı ile getirilen yeniliklerden biridir?", 
+            a: ["Halkın ilk kez yönetime katılması", "Herkesin can, mal ve namus güvenliğinin devlet garantisine alınması", "Yeniçeri Ocağı'nın kaldırılması", "Halifeliğin yetkilerinin artırılması", "Anayasal düzene tam geçiş"], 
+            correct: 1, 
+            reason: "1839 Tanzimat Fermanı ile hukuk devleti yolunda ilk önemli adım atılmış ve temel haklar korunmuştur." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "Milli Mücadele döneminde İstanbul Hükümeti'nin TBMM'yi ve Temsil Heyeti'ni 'resmen' tanıdığı ilk olay hangisidir?", 
+            a: ["Sivas Kongresi", "Amasya Görüşmeleri", "Bilecik Mülakatı", "Londra Konferansı", "Mudanya Ateşkesi"], 
+            correct: 1, 
+            reason: "Salih Paşa ile yapılan Amasya Görüşmeleri ile İstanbul Hükümeti temsil heyetini resmen tanımıştır." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Osmanlı Devleti'nde 'Enderun' mektebine öğrenci seçimi hangi sistemle yapılmaktaydı?", 
+            a: ["İltizam", "Devşirme", "Tımar", "Müsadere", "Vakıf"], 
+            correct: 1, 
+            reason: "Devşirme sistemiyle alınan yetenekli çocuklar Enderun'da eğitilerek devlet adamı yapılırdı." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "I. Dünya Savaşı'ndan sonra imzalanan 'Sevr Antlaşması' neden hukuken geçersiz kabul edilmiştir?", 
+            a: ["Padişah imzalamadığı için", "Mebusan Meclisi'nin onayından geçmediği için", "Yunanistan antlaşmaya uymadığı için", "İngiltere'nin çekilmesi üzerine", "Savaş devam ettiği için"], 
+            correct: 1, 
+            reason: "Anayasa (Kanun-i Esasi) gereği bir antlaşmanın meclis onayından geçmesi gerekir; o dönemde meclis kapalıydı." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "Türk tarihinde 'Nizam-ı Alem' ülküsüyle bilinen ve ilk kez 'Hakan' unvanını kullanan hükümdar hangisidir?", 
+            a: ["Mete Han", "Bumin Kağan", "Bilge Kağan", "Bayanchur", "Kültigin"], 
+            correct: 1, 
+            reason: "Bumin Kağan, Göktürk Devleti'nin kurucusu olarak bu unvanla anılır." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "Osmanlı Devleti'nde devlet memurlarına 'Fes ve Pantolon' giyme zorunluluğu getiren padişah hangisidir?", 
+            a: ["III. Selim", "II. Mahmut", "Abdülmecid", "II. Abdülhamid", "V. Mehmet Reşad"], 
+            correct: 1, 
+            reason: "II. Mahmut, kılık kıyafet inkılabı ile memurların görünümünü batılılaştırmıştır." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Aşağıdakilerden hangisi I. İnönü Zaferi'nin 'ulusal' sonuçlarından biridir?", 
+            a: ["Londra Konferansı'nın toplanması", "Moskova Antlaşması'nın imzalanması", "Teşkilat-ı Esasiye Kanunu'nun kabul edilmesi", "Afganistan ile dostluk antlaşması yapılması", "TBMM'nin saygınlığının dış dünyada artması"], 
+            correct: 2, 
+            reason: "Anayasanın kabulü devletin iç işleyişiyle ilgili olduğu için ulusal bir sonuçtur." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "Türk Medeni Kanunu'nda (1926) yapılan düzenlemelerle aşağıdakilerden hangisi hedeflenmemiştir?", 
+            a: ["Hukuk birliğini sağlamak", "Patrikhane'nin dünyevi yetkilerini sona erdirmek", "Kadınlara siyasi haklar tanımak", "Aile yapısını modernleştirmek", "Sosyal hayatta eşitlik sağlamak"], 
+            correct: 2, 
+            reason: "Siyasi haklar (seçme-seçilme) 1926 Medeni Kanunu'nda yoktur; 1930 ve 1934'te verilmiştir." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Osmanlı Devleti'nde 'Reaya' tabiri kimler için kullanılır?", 
+            a: ["Yöneten sınıf", "Ordu mensupları", "Üreten ve vergi veren halk", "Saray görevlileri", "İlmiye sınıfı"], 
+            correct: 2, 
+            reason: "Reaya, devlet yönetimine katılmayan, vergi yükümlüsü olan halktır." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "Mustafa Kemal'e 'Başkomutanlık' yetkisi hangi savaştan sonra verilmiştir?", 
+            a: ["I. İnönü", "II. İnönü", "Kütahya-Eskişehir", "Sakarya", "Büyük Taarruz"], 
+            correct: 2, 
+            reason: "Kütahya-Eskişehir yenilgisi sonrası meclis tüm yetkilerini 3 aylığına Atatürk'e devretmiştir." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "Türkiye Cumhuriyeti'nin 'ilk muhalefet partisi' hangisidir?", 
+            a: ["Halk Fırkası", "Terakkiperver Cumhuriyet Fırkası", "Serbest Cumhuriyet Fırkası", "Demokrat Parti", "Millet Partisi"], 
+            correct: 1, 
+            reason: "1924 yılında Kazım Karabekir ve arkadaşları tarafından kurulmuştur." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "I. Dünya Savaşı'nda Osmanlı'nın kaybettiği ancak Milli Mücadele ile geri kazandığı yer hangisidir?", 
+            a: ["Batum", "Musul", "Doğu Trakya", "Halep", "Selanik"], 
+            correct: 2, 
+            reason: "Doğu Trakya Mudanya Ateşkesi ile savaşsız geri alınmıştır." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Osmanlı Devleti'nde 'Lonca' teşkilatının görevleri arasında hangisi yer almaz?", 
+            a: ["Fiyatları (Narh) belirlemek", "Kalite kontrolü yapmak", "Usta-çırak ilişkisini düzenlemek", "Devletin dış siyasetini belirlemek", "Üyeler arasında yardımlaşmayı sağlamak"], 
+            correct: 3, 
+            reason: "Loncalar mesleki ve iktisadi kuruluşlardır, siyasi yetkileri yoktur." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Misak-ı Milli kararları ilk kez hangi mecliste kabul edilmiştir?", 
+            a: ["TBMM", "Son Osmanlı Mebusan Meclisi", "Sivas Kongresi Heyeti", "Erzurum Kongresi Meclisi", "Kurucu Meclis"], 
+            correct: 1, 
+            reason: "28 Ocak 1920'de İstanbul'daki Mebusan Meclisi'nde gizli oturumla kabul edilmiştir." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "Aşağıdakilerden hangisi Atatürk döneminde sağlık alanında yapılan çalışmalardan biridir?", 
+            a: ["Numune Hastanelerinin açılması", "Türk Dil Kurumu'nun kurulması", "Aşar vergisinin kaldırılması", "Köy Enstitüleri'nin kurulması", "Soyadı Kanunu'nun çıkarılması"], 
+            correct: 0, 
+            reason: "Modern sağlık hizmetleri için Türkiye'nin çeşitli yerlerinde Numune Hastaneleri açılmıştır." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "Osmanlı Devleti'nde 'Harem'in temel işlevi nedir?", 
+            a: ["Sadece padişahın özel hayatının geçtiği yerdir", "Saray kadınlarının eğitim aldığı bir okuldur", "Yabancı elçilerin ağırlandığı yerdir", "Divan toplantılarının yapıldığı yerdir", "Hazine dairesidir"], 
+            correct: 1, 
+            reason: "Harem, saray kadınlarının adap, sanat ve protokol eğitimi aldığı bir eğitim yuvasıdır." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "I. Tekalif-i Milliye Emirleri\nII. Hıyanet-i Vataniye Kanunu\nIII. Takrir-i Sükun Kanunu\n\nYukarıdakilerden hangileri doğrudan Kurtuluş Savaşı'nın askeri ihtiyaçlarını karşılamak ve disiplini sağlamak için çıkarılmıştır?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 1, 
+            reason: "Takrir-i Sükun (1925) Şeyh Sait isyanı ve inkılapların korunması için çıkarılmıştır (Savaş sonrası)." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "Osmanlı Devleti'nde 'Panslavizm' tehlikesine karşı Balkan topraklarını korumaya yönelik geliştirilen fikir akımı hangisidir?", 
+            a: ["Türkçülük", "İslamcılık", "Osmanlıcılık", "Batıcılık", "Adem-i Merkeziyetçilik"], 
+            correct: 2, 
+            reason: "Tüm tebaayı dil, din ayrımı gözetmeden eşit sayan Osmanlıcılık, parçalanmayı durdurmayı hedeflemiştir." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "Aşağıdakilerden hangisi I. Dünya Savaşı'ndan sonra Anadolu'da başlayan işgallere karşı kurulan yararlı cemiyetlerden biri değildir?", 
+            a: ["Trakya-Paşaeli Cemiyeti", "Doğu Anadolu Müdafaa-i Hukuk Cemiyeti", "Kilikyalılar Cemiyeti", "Wilson Prensipleri Cemiyeti", "Redd-i İlhak Cemiyeti"], 
+            correct: 3, 
+            reason: "Wilson Prensipleri Cemiyeti, kurtuluşu ABD mandasında gördüğü için milli varlığa düşman cemiyetler arasında yer alır." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "Osmanlı Devleti'nde 'Sancak Sistemi' ile yetişen son padişah aşağıdakilerden hangisidir?", 
+            a: ["III. Mehmet", "I. Ahmed", "IV. Murad", "II. Osman", "I. Süleyman"], 
+            correct: 0, 
+            reason: "III. Mehmet sancaktan gelerek tahta çıkan son padişahtır; kendisi de bu sistemi kaldırmıştır." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Mustafa Kemal'in 'Minber' gazetesini çıkardığı dönem aşağıdakilerden hangisidir?", 
+            a: ["Harp Okulu yılları", "Mondros sonrası İstanbul dönemi", "Sivas Kongresi sırası", "TBMM açıldıktan sonra", "Cumhuriyet ilanı sonrası"], 
+            correct: 1, 
+            reason: "Mustafa Kemal, Fethi (Okyar) Bey ile birlikte İstanbul'da düşüncelerini yaymak için Minber'i çıkarmıştır." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "I. Saltanatın kaldırılması\nII. Halifeliğin kaldırılması\nIII. Şeriyye ve Evkaf Vekaleti'nin kaldırılması\n\nYukarıdaki inkılaplardan hangileri doğrudan laiklik ilkesiyle ilgilidir?", 
+            a: ["Yalnız I", "Yalnız II", "I ve II", "II ve III", "I, II ve III"], 
+            correct: 4, 
+            reason: "Üç inkılap da din ve devlet işlerinin ayrılması ve yönetimin dünyevileşmesiyle doğrudan ilgilidir." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "Misak-ı Milli'de yer alan 'Boğazların dünya ticaretine açılması' hangi şarta bağlanmıştır?", 
+            a: ["İngiltere'nin onayına", "Yunanistan'ın çekilmesine", "İstanbul ve Marmara Denizi'nin güvenliğinin sağlanmasına", "Rusya ile ortak yönetime", "Süveyş Kanalı'nın açılmasına"], 
+            correct: 2, 
+            reason: "Marmara ve İstanbul güvende olduğu sürece Boğazlar ticarete açılabilir şartı getirilmiştir." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Osmanlı Devleti'nde 'Kadı'ların görevleri arasında aşağıdakilerden hangisi yer almaz?", 
+            a: ["Yargılama yapmak", "Noterlik görevini yürütmek", "Belediye hizmetlerini denetlemek", "Ordunun stratejisini belirlemek", "Merkezden gelen emirleri halka duyurmak"], 
+            correct: 3, 
+            reason: "Kadılar adalet ve idari işlerden sorumludur; askeri strateji belirleme yetkileri yoktur." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "Milli Mücadele'de Güney Cephesi'nde Fransızlara karşı verilen mücadele hangi antlaşma ile sona ermiştir?", 
+            a: ["Gümrü", "Moskova", "Ankara (1921)", "Mudanya", "Lozan"], 
+            correct: 2, 
+            reason: "Sakarya Zaferi'nden sonra imzalanan Ankara Antlaşması ile Fransızlar işgal ettikleri yerleri boşaltmıştır." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "Osmanlı Devleti'nde ordu mensuplarına ve devlet memurlarına ödenen üç aylık maaşa ne ad verilir?", 
+            a: ["Cülus", "Ulufe", "Cizye", "Öşür", "İltizam"], 
+            correct: 1, 
+            reason: "Ulufe, Kapıkulu askerlerine ve memurlara verilen düzenli üç aylık maaştır." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "I. Balkan Savaşı sonucunda Osmanlı Devleti'nin kaybettiği yerler arasında hangisi yoktur?", 
+            a: ["Edirne", "Kırklareli", "Batı Trakya", "Doğu Trakya", "Selanik"], 
+            correct: 3, 
+            reason: "I. Balkan sonunda hepsi kaybedildi; ancak II. Balkan Savaşı ile Doğu Trakya (Edirne-Kırklareli) geri alınmıştır." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Mustafa Kemal'e 'Gazi' unvanı hangi meclis tarafından verilmiştir?", 
+            a: ["Son Osmanlı Mebusan Meclisi", "I. TBMM", "II. TBMM", "Kurucu Meclis", "Milli Savunma Kurulu"], 
+            correct: 1, 
+            reason: "19 Eylül 1921'de I. TBMM tarafından Sakarya Meydan Muharebesi sonrası verilmiştir." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "Aşağıdakilerden hangisi Şeyh Sait İsyanı'nın sonuçlarından biridir?", 
+            a: ["Saltanatın kaldırılması", "Terakkiperver Cumhuriyet Fırkası'nın kapatılması", "Menemen Olayı'nın çıkması", "II. Meşrutiyet'in ilanı", "Hatay'ın ana vatana katılması"], 
+            correct: 1, 
+            reason: "İsyanın çıkmasında etkisi olduğu gerekçesiyle Takrir-i Sükun kanununa dayanarak parti kapatılmıştır." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Osmanlı Devleti'nde 'Nişancı'nın tuttuğu ve toprak kayıtlarının yer aldığı defterlere ne ad verilir?", 
+            a: ["Mühimme", "Tahrir", "Şeriyye Sicili", "Salname", "Tereke"], 
+            correct: 1, 
+            reason: "Tahrir defterleri, fethedilen arazilerin vergi ve mülkiyet bilgilerini içerir." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "TBMM'nin varlığını tanıyan ilk Avrupalı devlet hangisidir?", 
+            a: ["İngiltere", "Fransa", "Sovyet Rusya", "İtalya", "Ermenistan"], 
+            correct: 2, 
+            reason: "16 Mart 1921 Moskova Antlaşması ile Sovyet Rusya TBMM'yi tanıyan ilk büyük Avrupalı devlet olmuştur." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "I. Tekalif-i Milliye Emirleri\nII. Teşvik-i Sanayi Kanunu\nIII. Misak-ı İktisadi Kararları\n\nYukarıdakilerden hangileri doğrudan özel sektörü üretime teşvik etmeyi amaçlamıştır?", 
+            a: ["Yalnız I", "Yalnız II", "I ve II", "II ve III", "I, II ve III"], 
+            correct: 3, 
+            reason: "Teşvik-i Sanayi ve İktisat Kongresi kararları yerli üreticiyi destekler (Tekalif-i Milliye ordunun ihtiyacı içindir)." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "I. Dünya Savaşı'ndan çekilen ilk devlet aşağıdakilerden hangisidir?", 
+            a: ["Rusya", "Bulgaristan", "Japonya", "Osmanlı", "İtalya"], 
+            correct: 2, 
+            reason: "Japonya, Uzak Doğu'daki Alman sömürgelerini ele geçirip amacına ulaştıktan sonra savaştan erken çekilmiştir." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Osmanlı Devleti'nde 'Dikey Hareketlilik'e örnek olarak aşağıdakilerden hangisi gösterilebilir?", 
+            a: ["Bir çiftçinin toprağını satması", "Bir esnafın başka bir şehre göç etmesi", "Bir medrese öğrencisinin kazaskerliğe yükselmesi", "Bir sipahinin emekli olması", "Bir şehzadenin sancağa çıkması"], 
+            correct: 2, 
+            reason: "Reaya sınıfından eğitim yoluyla yönetici (askeri) sınıfa geçiş dikey hareketliliktir." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Mustafa Kemal'in 'Hattı müdafaa yoktur, sathı müdafaa vardır. O satıh bütün vatandır.' sözüyle stratejisini belirlediği savaş hangisidir?", 
+            a: ["Çanakkale", "I. İnönü", "Sakarya", "Büyük Taarruz", "Dumlupınar"], 
+            correct: 2, 
+            reason: "Bu söz dünya savaş literatürüne giren bir topyekün savunma stratejisidir ve Sakarya'da uygulanmıştır." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "Osmanlı Devleti'nde 'Divan-ı Hümayun' hangi padişah döneminde kaldırılmıştır?", 
+            a: ["III. Selim", "II. Mahmut", "Abdülmecid", "II. Abdülhamid", "V. Mehmet Reşad"], 
+            correct: 1, 
+            reason: "II. Mahmut divanı kaldırarak yerine 'Nazırlıklar' (Bakanlıklar) sistemini kurmuştur." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "I. Amasya Genelgesi\nII. Erzurum Kongresi\nIII. Sivas Kongresi\n\nYukarıdakilerin hangilerinde 'Milli bir meclisin derhal toplanması' gerektiği vurgulanmıştır?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 3, 
+            reason: "Erzurum ve Sivas kararlarında meclisin toplanması ve hükümetin denetlenmesi açıkça istenmiştir." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "1921 Anayasası'nda yapılan 1923 değişikliği ile aşağıdakilerden hangisi anayasaya eklenmiştir?", 
+            a: ["Devletin başkenti Ankara'dır", "Devletin yönetim şekli Cumhuriyettir", "Atatürk ilkeleri anayasaya girmiştir", "Kadınlara seçme hakkı verilmiştir", "Tek dereceli seçim sistemine geçilmiştir"], 
+            correct: 1, 
+            reason: "29 Ekim 1923'te Cumhuriyetin ilanıyla 'Türkiye Devleti'nin hükümet şekli Cumhuriyettir' maddesi eklenmiştir." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "Osmanlı Devleti'nde 'İstimalet' politikasının temel amacı nedir?", 
+            a: ["Fethedilen yerlerdeki halkı zorla Müslüman yapmak", "Halkın devlete olan bağlılığını hoşgörü ve adaletle sağlamak", "Toprakları yabancılara satmak", "Dini eğitimi yasaklamak", "Merkezi otoriteyi zayıflatmak"], 
+            correct: 1, 
+            reason: "İstimalet 'gönül alma' demektir; Balkanlar'daki kalıcılığın anahtarıdır." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "Aşağıdakilerden hangisi Amasya Görüşmeleri'nde alınan ancak İstanbul Hükümeti tarafından uygulanmayan karardır?", 
+            a: ["Barış konferansına temsilci gönderilmesi", "Seçimlerin yapılması", "Mebusan Meclisi'nin İstanbul dışında güvenli bir yerde toplanması", "Zararlı cemiyetlerin kapatılması", "Sivas Kongresi kararlarının kabulü"], 
+            correct: 2, 
+            reason: "Hükümet, meclisin İstanbul dışında toplanmasını anayasaya aykırı bularak reddetmiştir." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "Osmanlı Devleti'nde 'Beylerbeyi'nin görevi nedir?", 
+            a: ["Padişahı korumak", "Eyaletin mülki ve askeri yönetiminden sorumlu olmak", "Hukuk işlerini düzenlemek", "Eğitim sistemini denetlemek", "Hazineden sorumlu olmak"], 
+            correct: 1, 
+            reason: "Beylerbeyi, eyalet sistemindeki en üst düzey idarecidir." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Aşağıdakilerden hangisi Atatürk'ün 'Halkçılık' ilkesinin doğal bir sonucudur?", 
+            a: ["Sınıf ayrımının ortadan kalkması ve fırsat eşitliği", "Siyasi partilerin kapatılması", "Dini eğitimin zorunlu olması", "Ekonominin tamamen dışa açılması", "Geleneksel kıyafetlerin korunması"], 
+            correct: 0, 
+            reason: "Halkçılık, toplumda imtiyazsız, sınıfsız ve kaynaşmış bir yapı hedefler." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "Osmanlı Devleti'nde 'Darülfünun' hangi padişah döneminde eğitim-öğretime açılmıştır?", 
+            a: ["Abdülmecid", "Abdülaziz", "II. Abdülhamid", "II. Mahmut", "III. Selim"], 
+            correct: 2, 
+            reason: "Modern üniversiteleşme adımı olan Darülfünun, II. Abdülhamid döneminde sistemli hale gelmiştir." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "Erzurum Kongresi'nde alınan 'Azınlıklara siyasi hakimiyetimizi ve sosyal dengemizi bozacak imtiyazlar verilemez.' kararı aşağıdakilerden hangisine bir tepki niteliğindedir?", 
+            a: ["Tanzimat Fermanı'na", "Islahat Fermanı'na", "Sened-i İttifak'a", "Kanun-i Esasi'ye", "Teşkilat-ı Esasiye'ye"], 
+            correct: 1, 
+            reason: "1856 Islahat Fermanı ile azınlıklara verilen aşırı haklar ve Avrupalı devletlerin iç işlerimize karışmasına bir tepkidir." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Osmanlı Devleti'nde 'Müsadere' sisteminin (mallara el koyma) kaldırılmasının temel amacı nedir?", 
+            a: ["Dış borçları ödemek", "Özel mülkiyet anlayışını ve güvenliğini sağlamak", "Orduyu güçlendirmek", "Eğitimi yaygınlaştırmak", "Vakıf sistemini bitirmek"], 
+            correct: 1, 
+            reason: "Müsadere sisteminin kalkmasıyla kişilerin mülkü devlet güvencesine alınmış ve miras hakkı güçlenmiştir." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "I. Dünya Savaşı devam ederken Rusya'nın savaştan çekilmesine neden olan iç gelişme hangisidir?", 
+            a: ["31 Mart Olayı", "Bolşevik İhtilali", "Fransız İhtilali", "Sanayi İnkılabı", "Kuleli Vakası"], 
+            correct: 1, 
+            reason: "1917 Bolşevik İhtilali ile Çarlık Rusyası yıkılmış ve yeni yönetim savaştan çekilmiştir." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "Selçuklularda hükümdar çocuklarının eğitiminden sorumlu olan görevliye 'Atabey' denirken, Osmanlılarda bu görevliye ne ad verilir?", 
+            a: ["Müderris", "Lala", "Nişancı", "Mültezim", "Subaşı"], 
+            correct: 1, 
+            reason: "Osmanlılarda şehzadeleri sancaklarda eğiten tecrübeli devlet adamlarına Lala denir." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "I. Gümrü Antlaşması\nII. Ankara Antlaşması (1921)\nIII. Moskova Antlaşması\n\nYukarıdakilerden hangileriyle Türkiye'nin 'Güney' sınırı belirlenmiştir?", 
+            a: ["Yalnız I", "Yalnız II", "I ve II", "II ve III", "I, II ve III"], 
+            correct: 1, 
+            reason: "Güney sınırı Fransızlarla imzalanan 1921 Ankara Antlaşması ile çizilmiştir." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Mustafa Kemal'in 'Ya istiklal ya ölüm!' parolasını ilk kez hangi gelişme sırasında vurguladığı kabul edilir?", 
+            a: ["Amasya Genelgesi", "Sivas Kongresi", "TBMM'nin açılışı", "Erzurum Kongresi", "Sakarya Savaşı"], 
+            correct: 1, 
+            reason: "Sivas Kongresi'nde tam bağımsızlık düşüncesi bu parola ile kesinleşmiştir." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "Aşağıdakilerden hangisi 1930 yılında kurulan Serbest Cumhuriyet Fırkası'nın kurucusudur?", 
+            a: ["Kazım Karabekir", "Ali Fethi Okyar", "Adnan Adıvar", "Refet Bele", "Rauf Orbay"], 
+            correct: 1, 
+            reason: "Atatürk'ün isteği ile çok partili hayat denemesi için Ali Fethi Okyar tarafından kurulmuştur." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Osmanlı Devleti'nde 'Defterdar'ın görev alanı aşağıdakilerden hangisidir?", 
+            a: ["Hukuk ve Adalet", "Eğitim ve Kültür", "Maliye ve Ekonomi", "Dış Siyaset", "Ordu Yönetimi"], 
+            correct: 2, 
+            reason: "Defterdar, devletin tüm gelir ve giderlerinden sorumlu maliye başkanıdır." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "TBMM'yi ve Misak-ı Milli'yi tanıyan 'ilk Müslüman devlet' hangisidir?", 
+            a: ["İran", "Irak", "Afganistan", "Mısır", "Suriye"], 
+            correct: 2, 
+            reason: "1 Mart 1921'de imzalanan Türk-Afgan Dostluk Antlaşması ile Afganistan TBMM'yi tanımıştır." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "I. Şapka Kanunu\nII. Soyadı Kanunu\nIII. Tekke ve Zaviyelerin Kapatılması\n\nYukarıdaki inkılaplardan hangileri toplumsal alanda eşitlik ve çağdaşlaşmayı sağlamaya yöneliktir?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 4, 
+            reason: "Her üç inkılap da toplumsal yapıyı modernize etmek ve imtiyazları kaldırmak amacıyla yapılmıştır." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "I. Dünya Savaşı'nda 'Kanal Cephesi'nin açılmasında etkili olan devlet hangisidir?", 
+            a: ["İngiltere", "Almanya", "Fransa", "Rusya", "İtalya"], 
+            correct: 1, 
+            reason: "Almanya, İngiltere'nin sömürge yollarını kesmek amacıyla Osmanlı'yı bu cepheyi açmaya teşvik etmiştir." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Osmanlı Devleti'nde 'Kaza' biriminin başında bulunan ve hem idari hem adli yetkileri olan görevli kimdir?", 
+            a: ["Subaşı", "Kadı", "Muhtesip", "Nişancı", "Mültezim"], 
+            correct: 1, 
+            reason: "Kadılar kazalarda hem adaleti sağlar hem de belediye ve idari işleri yönetirdi." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Amasya Genelgesi'nde yer alan 'Milletin bağımsızlığını yine milletin azim ve kararı kurtaracaktır.' maddesi aşağıdakilerden hangisinin habercisidir?", 
+            a: ["Saltanatın devam edeceğinin", "Milli egemenliğe dayalı bir yönetimin kurulacağının", "Dış yardımların beklendiğinin", "İstanbul Hükümeti ile ortak hareket edileceğinin", "Manda sisteminin kabul edileceğinin"], 
+            correct: 1, 
+            reason: "Bu madde, ileride kurulacak olan cumhuriyet ve milli irade yönetiminin ilk işaretidir." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "Osmanlı Devleti'nde 'Esham' (İç borçlanma) sistemi ilk kez hangi padişah döneminde uygulanmaya başlanmıştır?", 
+            a: ["III. Mustafa", "I. Abdülhamid", "III. Selim", "II. Mahmut", "Abdülmecid"], 
+            correct: 0, 
+            reason: "III. Mustafa döneminde hazırlıkları yapılan sistem, I. Abdülhamid döneminde fiilen uygulanmıştır." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "I. Erzurum Kongresi\nII. Sivas Kongresi\nIII. Amasya Genelgesi\n\nYukarıdakilerden hangilerinde 'Manda ve Himaye' konusu tartışılmış ve reddedilmiştir?", 
+            a: ["Yalnız I", "Yalnız II", "I ve II", "II ve III", "I, II ve III"], 
+            correct: 2, 
+            reason: "Manda Erzurum'da ilk kez, Sivas'ta ise kesin olarak reddedilmiştir." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "1924 Anayasası'na göre 'Seçme ve seçilme' hakkı ile ilgili aşağıdakilerden hangisi yanlıştır?", 
+            a: ["Seçmen yaşı başlangıçta 18'dir", "Sadece erkekler oy kullanabilmektedir", "Seçimler dört yılda bir yapılır", "Kadınlar ilk kez 1924'te oy kullanmıştır", "Çift dereceli seçim sistemi uygulanmaktadır"], 
+            correct: 3, 
+            reason: "Kadınlar genel seçimlerde ilk kez 1934 yılında oy kullanma hakkı elde etmiştir." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "Osmanlı Devleti'nde 'Millet Sistemi' neye göre belirlenmiştir?", 
+            a: ["Irk esaslı", "Dil esaslı", "Din ve mezhep esaslı", "Meslek esaslı", "Sınıf esaslı"], 
+            correct: 2, 
+            reason: "Osmanlı'da toplum ırka göre değil, dini inançlarına göre (Müslüman-Gayrimüslim) organize edilmiştir." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "Amasya Görüşmeleri'nde Temsil Heyeti ile İstanbul Hükümeti arasında tam bir uzlaşma sağlanamayan temel konu hangisidir?", 
+            a: ["Seçimlerin yapılması", "Mebusan Meclisi'nin toplanacağı yer", "Yabancı işgallere karşı durulması", "Zararlı cemiyetlerin faaliyetleri", "Sivas Kongresi kararları"], 
+            correct: 1, 
+            reason: "Hükümet meclisin İstanbul'da, Temsil Heyeti ise Anadolu'da toplanmasını savunmuştur." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "Osmanlı Devleti'nde 'Nişancı' padişahın hangi belgesine imza atma (tuğra çekme) yetkisine sahiptir?", 
+            a: ["Ferman ve Berat", "Fetva", "Şeriyye Sicili", "İrade-i Seniyye", "Mazbata"], 
+            correct: 0, 
+            reason: "Nişancı, resmi belgeler olan ferman ve beratların üzerine padişahın tuğrasını çeker." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Atatürk'ün 'Devletçilik' ilkesi aşağıdakilerden hangisini zorunlu kılmıştır?", 
+            a: ["Özel teşebbüsün tamamen yasaklanmasını", "Devletin ekonomik yatırımları bizzat yapmasını", "Dış ticaretin durdurulmasını", "Sadece tarıma önem verilmesini", "Yabancı sermayenin millileştirilmemesini"], 
+            correct: 1, 
+            reason: "Sermaye yetersizliği çeken halkın yapamadığı büyük yatırımları devletin üstlenmesini öngörür." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "Osmanlı Devleti'nde 'Darülaceze' hangi padişah döneminde kurulmuştur?", 
+            a: ["Abdülmecid", "Abdülaziz", "II. Abdülhamid", "II. Mahmut", "III. Selim"], 
+            correct: 2, 
+            reason: "Kimsesiz ve yardıma muhtaçlar için II. Abdülhamid döneminde kurulmuş bir sosyal yardım kurumudur." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "Sivas Kongresi'nde manda ve himaye fikrinin 'kesin' olarak reddedilmesi neyin göstergesidir?", 
+            a: ["Padişaha bağlılığın", "Tam bağımsızlık düşüncesinden taviz verilmeyeceğinin", "Rusya ile iş birliği yapılacağının", "Bölgesel kurtuluşun hedeflendiğinin", "İstanbul Hükümeti'nin desteklendiğinin"], 
+            correct: 1, 
+            reason: "Manda fikrinin bir daha açılmamak üzere kapanması, bağımsızlık kararlılığının en net ifadesidir." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Osmanlı Devleti'nde 'Reisülküttab' 18. yüzyıldan itibaren hangi görevi üstlenmiştir?", 
+            a: ["Maliye Bakanlığı", "İçişleri Bakanlığı", "Dışişleri Bakanlığı", "Adalet Bakanlığı", "Milli Eğitim Bakanlığı"], 
+            correct: 2, 
+            reason: "Diplomatik ilişkilerin artmasıyla Nişancı'dan ayrılarak hariciye (dışişleri) sorumlusu olmuştur." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "Milli Mücadele'de Batı Cephesi'ndeki Yunan ilerleyişini durdurmak amacıyla çekilen savunma hattı hangisidir?", 
+            a: ["Sakarya Hattı", "Milne Hattı", "Kars Hattı", "Ankara Hattı", "İzmir Hattı"], 
+            correct: 1, 
+            reason: "İngiliz general Milne tarafından önerilen bu hat, bir süre fiili sınır olarak kullanılmıştır." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "Osmanlı Devleti'nde 'Tahrir Defterleri' hangi Divan üyesi tarafından tutulur?", 
+            a: ["Kazasker", "Defterdar", "Nişancı", "Sadrazam", "Şeyhülislam"], 
+            correct: 2, 
+            reason: "Tapu ve kadastro kayıtlarını içeren tahrir defterlerinin tutulması Nişancı'nın sorumluluğundadır." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "Osmanlı Devleti'de 'Mü sadere' sistemi ilk kez hangi padişah döneminde yasallaşmış ve sistemli hale gelmiştir?", 
+            a: ["Fatih Sultan Mehmet", "II. Mahmut", "Kanuni Sultan Süleyman", "Yavuz Sultan Selim", "I. Murad"], 
+            correct: 0, 
+            reason: "Müsadere sistemi, Çandarlı Halil Paşa'nın idamı ve mallarına el konulmasıyla Fatih döneminde kurumsallaşmıştır." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Mustafa Kemal'in 'Siyasi ve askeri zaferler ne kadar büyük olursa olsun, ekonomik zaferlerle taçlandırılmazlarsa kazanılan zaferler kalıcı olmaz.' sözünü söylediği olay hangisidir?", 
+            a: ["Lozan Barış Konferansı", "İzmir İktisat Kongresi", "TBMM'nin Açılışı", "Cumhuriyetin İlanı", "Sakarya Zaferi"], 
+            correct: 1, 
+            reason: "Atatürk, 1923'teki İzmir İktisat Kongresi açılış konuşmasında tam bağımsızlığın ekonomiyle mümkün olduğunu vurgulamıştır." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "Aşağıdakilerden hangisi 1934 yılında kabul edilen 'Soyadı Kanunu'nun amaçlarından biri değildir?", 
+            a: ["Toplumsal hayatı düzene sokmak", "Resmi işlemlerdeki karışıklıkları önlemek", "Ayrıcalık bildiren unvanları kaldırmak", "Halkçılık ilkesini pekiştirmek", "Kadınların siyasi haklarını sınırlamak"], 
+            correct: 4, 
+            reason: "Soyadı Kanunu eşitlik ve düzen amaçlar; siyasi haklarla bir ilgisi yoktur." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Osmanlı Devleti'nde 'Reisülküttab'ın bağlı olduğu Divan üyesi aşağıdakilerden hangisidir?", 
+            a: ["Sadrazam", "Kazasker", "Nişancı", "Defterdar", "Kaptan-ı Derya"], 
+            correct: 2, 
+            reason: "Reisülküttab, 18. yüzyıla kadar Nişancı'ya bağlı olarak çalışmış, sonra müstakil hale gelmiştir." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "Milli Mücadele döneminde imzalanan 'Moskova Antlaşması' ile aşağıdaki yerlerden hangisi Misak-ı Milli'den verilen ilk taviz olmuştur?", 
+            a: ["Musul", "Batum", "Hatay", "Kars", "Gümrü"], 
+            correct: 1, 
+            reason: "1921 Moskova Antlaşması ile Batum Gürcistan'a (Sovyet Rusya kontrolüne) bırakılmıştır." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "I. Aşar vergisinin kaldırılması\nII. Türk Medeni Kanunu\nIII. Kabotaj Kanunu\n\nYukarıdakilerden hangileri doğrudan 'Halkçılık' ilkesiyle ilgilidir?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 1, 
+            reason: "Aşar köylüye kolaylık, Medeni Kanun eşitlik sağladığı için halkçılıktır (Kabotaj ise milliyetçiliktir)." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "Osmanlı Devleti'nde '93 Harbi' olarak bilinen 1877-1878 Osmanlı-Rus Savaşı sırasında savunmasıyla ünlü olan 'Plevne Kahramanı' kimdir?", 
+            a: ["Gazi Osman Paşa", "Gazi Muhtar Paşa", "Nene Hatun", "Cevat Paşa", "Enver Paşa"], 
+            correct: 0, 
+            reason: "Gazi Osman Paşa, Plevne Kalesi'nde gösterdiği üstün direnişle tarihe geçmiştir." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Osmanlı Devleti'nde 'Darülaceze' kimin döneminde kurulmuştur?", 
+            a: ["II. Abdülhamid", "Abdülmecid", "II. Mahmut", "III. Selim", "Abdülaziz"], 
+            correct: 0, 
+            reason: "1895 yılında kimsesizler ve yaşlılar için II. Abdülhamid tarafından kurulan sosyal yardım kurumudur." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Milli Mücadele'de Batı Cephesi'nde Yunanlılarla yapılan 'Sakarya Meydan Muharebesi'nin kazanılmasıyla hangi devletle Ankara Antlaşması imzalanmıştır?", 
+            a: ["İngiltere", "Rusya", "Fransa", "İtalya", "Ermenistan"], 
+            correct: 2, 
+            reason: "1921 Ankara Antlaşması Fransa ile imzalanmış ve Güney Cephesi kapanmıştır." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "I. Balkan Savaşı sonucunda imzalanan antlaşma aşağıdakilerden hangisidir?", 
+            a: ["Londra", "Bükreş", "İstanbul", "Atina", "Uşi"], 
+            correct: 0, 
+            reason: "1913 Londra Antlaşması ile I. Balkan Savaşı resmen sona ermiştir." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "I. İnönü Zaferi'nden sonra toplanan 'Londra Konferansı'na TBMM ile birlikte İstanbul Hükümeti'nin de davet edilmesinin amacı nedir?", 
+            a: ["Türk tarafı arasında görüş ayrılığından yararlanmak", "TBMM'yi resmen tanımak", "Sevr'i hafifleterek kabul ettirmek", "Yunan ordusuna zaman kazandırmak", "Savaşı tamamen bitirmek"], 
+            correct: 0, 
+            reason: "İtilaf devletleri iki tarafı birbirine düşürerek Sevr Antlaşması'nı onaylatmak istemişlerdir." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "Eski Türklerde devletin ikiye bölünerek yönetilmesine (Doğu-Batı) ne ad verilir?", 
+            a: ["Kut", "Kurultay", "İkili Teşkilat", "Balbal", "Töre"], 
+            correct: 2, 
+            reason: "Yönetimi kolaylaştırmak için uygulanan bu federatif sisteme ikili teşkilatlanma denir." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "Mustafa Kemal'e 'Başkomutanlık' yetkisinin verilmesinin ardından yayımladığı ve ordunun ihtiyaçlarını karşılamayı amaçlayan emirler hangisidir?", 
+            a: ["Tekalif-i Milliye", "Teşkilat-ı Esasiye", "Hıyanet-i Vataniye", "Takrir-i Sükun", "Misak-ı İktisadi"], 
+            correct: 0, 
+            reason: "Sakarya Savaşı öncesi halkın elindeki malzemelerin ordu için toplanmasını sağlayan emirlerdir." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "Osmanlı Devleti'nde 'Müderris'lerin atamasını ve yargı işlerini düzenleyen görevli kimdir?", 
+            a: ["Kazasker", "Şeyhülislam", "Nişancı", "Sadrazam", "Reisülküttab"], 
+            correct: 0, 
+            reason: "Kazasker, ilmiye sınıfının başı olarak eğitim ve adalet işlerinden sorumludur." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "Lozan Barış Antlaşması'nda 'Dış Borçlar' (Duyun-u Umumiye) sorunu nasıl çözülmüştür?", 
+            a: ["Tamamen silinmiştir", "Osmanlı'dan ayrılan devletler arasında paylaştırılmıştır", "Sadece Türkiye tarafından ödenmiştir", "İngiltere borçları üstlenmiştir", "Daha sonra görüşülmek üzere ertelenmiştir"], 
+            correct: 1, 
+            reason: "Borçlar, Osmanlı topraklarında kurulan devletlerin yüzölçümüne göre paylaştırılarak takside bağlanmıştır." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Mustafa Kemal'in 'Bu bir din meselesi değil, dil meselesidir.' dediği olay hangisidir?", 
+            a: ["31 Mart Olayı", "Menemen Olayı", "Bursa Olayı", "Şeyh Sait İsyanı", "Harf İnkılabı"], 
+            correct: 2, 
+            reason: "Ezanın Türkçe okunmasına karşı çıkanlara verilen ünlü cevaptır." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "Osmanlı Devleti'nde 'Encümen-i Daniş'in (Bilim Kurulu) kuruluş amacı nedir?", 
+            a: ["Orduyu modernize etmek", "Ders kitaplarını hazırlamak ve eğitim seviyesini artırmak", "Hukuk sistemini değiştirmek", "Vergi toplamak", "Dış borçları yönetmek"], 
+            correct: 1, 
+            reason: "Tanzimat döneminde bilimsel yayınları ve ders kitaplarını düzenlemek için kurulmuştur." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "Sivas Kongresi'nde 'Manda ve Himaye'nin kesin olarak reddedilmesi neyi gösterir?", 
+            a: ["Bağımsızlık düşüncesinden taviz verilmeyeceğini", "İngilizlerle uzlaşılacağını", "Padişahın desteklendiğini", "Rusya ile ittifak yapıldığını", "Savaşın bittiğini"], 
+            correct: 0, 
+            reason: "Manda fikrinin bir daha açılmamak üzere kapanması tam bağımsızlık kararını perçinlemiştir." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Osmanlı Devleti'nde 'Darülbedayi' olarak açılan kurum günümüzde hangisidir?", 
+            a: ["Şehir Tiyatroları", "Devlet Opera ve Balesi", "Milli Kütüphane", "Türk Dil Kurumu", "Devlet Konservatuvarı"], 
+            correct: 0, 
+            reason: "İstanbul Şehir Tiyatroları'nın temeli olan kurumdur." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "I. Dünya Savaşı sonunda imzalanan 'Versay Antlaşması' hangi devletle yapılmıştır?", 
+            a: ["Almanya", "Avusturya", "Macaristan", "Bulgaristan", "Osmanlı"], 
+            correct: 0, 
+            reason: "Savaşın sonunda Almanya'ya çok ağır şartlar yükleyen antlaşmadır." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "Aşağıdakilerden hangisi Selçuklularda 'Devlet'in gelir ve giderlerini denetleyen' kurumdur?", 
+            a: ["Divan-ı İstifa", "Divan-ı Arz", "Divan-ı İşraf", "Divan-ı İnşa", "Divan-ı Pervane"], 
+            correct: 2, 
+            reason: "Divan-ı İşraf, mali ve idari denetim mekanizmasıdır." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "Osmanlı Devleti'nde 'Vilayet Nizamnamesi' (1864) hangi padişah döneminde yayımlanmıştır?", 
+            a: ["Abdülaziz", "Abdülmecid", "II. Abdülhamid", "II. Mahmut", "V. Mehmet Reşad"], 
+            correct: 0, 
+            reason: "Taşra teşkilatını yeniden düzenleyen nizamname Sultan Abdülaziz dönemine aittir." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Milli Mücadele döneminde Batı Cephesi'nde kazanılan zaferlerin ardından toplanan 'Londra Konferansı'na TBMM hangi devletin aracılığıyla davet edilmiştir?", 
+            a: ["Fransa", "İtalya", "İngiltere", "Rusya", "Yunanistan"], 
+            correct: 1, 
+            reason: "İtalya'nın aracılığıyla TBMM konferansa resmen çağrılmıştır." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "I. Tekalif-i Milliye Emirleri\nII. Hıyanet-i Vataniye Kanunu\nIII. Men-i Müskirat Kanunu\n\nYukarıdakilerden hangileri TBMM'nin otoritesini artırmaya ve gelir elde etmeye yönelik çalışmalarıdır?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 4, 
+            reason: "Hıyanet-i Vataniye otorite, Tekalif-i Milliye lojistik, Men-i Müskirat (içki yasağı) ise hem gelir hem ahlak düzenidir." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Osmanlı Devleti'nde 'Muhtesip'in görevi aşağıdakilerden hangisidir?", 
+            a: ["Çarşı ve pazar denetimi yapmak", "Vergi toplamak", "Orduyu yönetmek", "Diplomatik yazışmaları yapmak", "Padişahı korumak"], 
+            correct: 0, 
+            reason: "Muhtesip, ticari hayatın dürüstlüğünden ve narh fiyatlarından sorumlu görevlidir." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "Osmanlı Devleti'nde 'Ayan'ların varlığının resmen tanındığı belge hangisidir?", 
+            a: ["Tanzimat Fermanı", "Islahat Fermanı", "Sened-i İttifak", "Kanun-i Esasi", "Teşkilat-ı Esasiye"], 
+            correct: 2, 
+            reason: "1808 Sened-i İttifak ile merkezi otorite taşradaki güçlü ayanların varlığını resmen kabul etmiştir." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "Milli Mücadele döneminde Batı Cephesi'ndeki birliklerin tek bir komuta altında toplanması kararı nerede alınmıştır?", 
+            a: ["Amasya Genelgesi", "Erzurum Kongresi", "Sivas Kongresi", "TBMM Açılışı", "Amasya Görüşmeleri"], 
+            correct: 2, 
+            reason: "Sivas Kongresi'nde tüm cemiyetler birleştirilmiş ve Batı Cephesi komutanlığına Ali Fuat Paşa atanmıştır." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "I. Dünya Savaşı sırasında Osmanlı Devleti'nin 'Tehcir Kanunu'nu (Zorunlu Göç) çıkarmasının temel nedeni nedir?", 
+            a: ["Ermenilerin Ruslarla iş birliği yaparak ayaklanması ve asayişi bozmaları", "Nüfus mübadelesi yapmak", "Yeni yerleşim alanları açmak", "Tarımı canlandırmak", "Dini birliği sağlamak"], 
+            correct: 0, 
+            reason: "Savaş güvenliğini korumak amacıyla 1915 yılında Ermeni çetelerinin faaliyetlerine karşı çıkarılmıştır." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Osmanlı Devleti'nde 'Şeriyye ve Evkaf Vekaleti'nin görev alanı hangisidir?", 
+            a: ["Dış Siyaset", "Maliye", "Din ve Vakıf işleri", "Eğitim", "Askerlik"], 
+            correct: 2, 
+            reason: "Cumhuriyet döneminde 3 Mart 1924'te kaldırılarak yerine Diyanet İşleri Başkanlığı ve Vakıflar Genel Müdürlüğü kurulmuştur." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Mustafa Kemal'in 'Dokuzuncu Ordu Müfettişi' olarak görevlendirilmesinde etkili olan resmi gerekçe hangisidir?", 
+            a: ["Samsun ve çevresindeki asayişsizliği ve Rum-Türk çatışmalarını önlemek", "Yeni bir devlet kurmak", "Mondros'u imzalamak", "Orduları terhis etmek", "Seçim hazırlığı yapmak"], 
+            correct: 0, 
+            reason: "İngilizlerin baskısı üzerine bölgedeki olayları yatıştırması için resmi yetkilerle gönderilmiştir." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "Aşağıdakilerden hangisi II. Mahmut dönemi askeri ıslahatlarından biri değildir?", 
+            a: ["Sekban-ı Cedid Ocağı'nın kurulması", "Eşkinci Ocağı'nın kurulması", "Yeniçeri Ocağı'nın kaldırılması", "Nizam-ı Cedid ordusunun kurulması", "Asakir-i Mansure-i Muhammediye'nin kurulması"], 
+            correct: 3, 
+            reason: "Nizam-ı Cedid ordusu III. Selim dönemi ıslahatıdır." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "I. Balkan Savaşı sonucunda Osmanlı Devleti'nin 'Meriç Nehri'nin batısındaki' toprakları kaybetmesine yol açan gelişme hangisidir?", 
+            a: ["Londra Antlaşması", "Bükreş Antlaşması", "İstanbul Antlaşması", "Atina Antlaşması", "Uşi Antlaşması"], 
+            correct: 0, 
+            reason: "1913 Londra Antlaşması ile sınır Midye-Enez hattı olmuş ve Trakya ile Balkan toprakları elden çıkmıştır." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "Kurtuluş Savaşı'nda 'Güney Cephesi'ndeki' yerel direnişi başlatan temel neden hangisidir?", 
+            a: ["Yunanlıların İzmir'e çıkması", "Fransızların Ermenilerle birlikte bölgeyi işgal etmesi ve halka baskı yapması", "İtalyanların Akdeniz'e gelmesi", "Mondros'un imzalanması", "TBMM'nin kurulması"], 
+            correct: 1, 
+            reason: "Maraş, Antep ve Urfa'da halk Fransız işgaline ve Ermeni intikam alaylarına karşı ayaklanmıştır." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "I. İzmir İktisat Kongresi\nII. Kabotaj Kanunu\nIII. Kapitülasyonların kaldırılması\n\nYukarıdakilerden hangileri doğrudan 'Milli Ekonomi' (Misak-ı İktisadi) hedeflerine yöneliktir?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 4, 
+            reason: "Üç gelişme de Türkiye'nin ekonomik bağımsızlığını ve kendi kaynaklarını kontrol etmesini amaçlar." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "Osmanlı Devleti'nde 'Kadı'ların tayin, terfi ve görevden alınma işlemlerini yürüten makam hangisidir?", 
+            a: ["Sadrazam", "Şeyhülislam", "Kazasker", "Nişancı", "Defterdar"], 
+            correct: 2, 
+            reason: "Kazasker, adli ve eğitim teşkilatının amiri olarak atamalardan sorumludur." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "Lozan Barış Konferansı'na 'Gözlemci' devlet olarak katılan ülke hangisidir?", 
+            a: ["ABD", "Sovyet Rusya", "Bulgaristan", "Japonya", "Belçika"], 
+            correct: 0, 
+            reason: "Amerika Birleşik Devletleri konferansa sadece gözlemci statüsünde katılmıştır." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Aşağıdakilerden hangisi Atatürk'ün 'Laiklik' ilkesi doğrultusunda yapılan ilk aşama olarak kabul edilebilir?", 
+            a: ["Saltanatın kaldırılması", "Halifeliğin kaldırılması", "Tekke ve Zaviyelerin kapatılması", "Medeni Kanun'un kabulü", "Şeriyye ve Evkaf Vekaleti'nin kaldırılması"], 
+            correct: 0, 
+            reason: "Din ve devlet işlerinin ayrılmasındaki ilk temel adım saltanatın kaldırılmasıdır." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "Osmanlı Devleti'nde 'Tanzimat Dönemi' hangi padişahları kapsar?", 
+            a: ["II. Mahmut - Abdülmecid", "Abdülmecid - Abdülaziz", "Abdülaziz - II. Abdülhamid", "II. Mahmut - II. Abdülhamid", "Abdülmecid - V. Murad"], 
+            correct: 1, 
+            reason: "1839-1876 arası Tanzimat dönemi, Sultan Abdülmecid ve Abdülaziz dönemlerini içine alır." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "Erzurum Kongresi'nde alınan 'Hristiyan azınlıklara siyasi hakimiyet ve sosyal dengemizi bozacak imtiyazlar verilemez' kararı hangi belgeye doğrudan bir tepkidir?", 
+            a: ["Tanzimat Fermanı", "Islahat Fermanı", "Berlin Antlaşması", "Paris Antlaşması", "Uşi Antlaşması"], 
+            correct: 1, 
+            reason: "Azınlıklara verilen hakların bağımsızlığı zedelediği görüşüyle Islahat Fermanı eleştirilmiştir." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Osmanlı Devleti'nde 'Lonca' teşkilatında ürünlerin fiyatını belirleyen sisteme ne ad verilir?", 
+            a: ["Gedik", "Narh", "Menzil", "İane", "Cizye"], 
+            correct: 1, 
+            reason: "Narh sistemiyle devlet ve lonca, temel ihtiyaç maddelerinin fiyatını belirleyerek fahiş fiyatı önlerdi." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "Milli Mücadele'de Batı Cephesi'nde Yunanlılarla yapılan 'Sakarya Meydan Muharebesi'nin süresi ne kadardır?", 
+            a: ["3 gün", "11 gün", "22 gün 22 gece", "4 gün", "30 gün"], 
+            correct: 2, 
+            reason: "Dünya tarihinin en uzun meydan muharebelerinden biridir ve topyekün savaş örneğidir." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "Osmanlı Devleti'nde 'Miri Topraklar' (Devlet mülkü) arasında geliri doğrudan saray kadınlarına ayrılan toprak hangisidir?", 
+            a: ["Paşmaklık", "Malikane", "Yurtluk", "Ocaklık", "Metruk"], 
+            correct: 0, 
+            reason: "Paşmaklık toprakların geliri padişah hanımları ve kızlarına ayrılırdı." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "I. Dünya Savaşı'ndan sonra imzalanan Mondros Ateşkesi'nin ardından Anadolu'daki işgallere karşı oluşan 'Kuvayımilliye'nin özellikleri arasında hangisi yoktur?", 
+            a: ["Bölgesel kurtuluşu hedefleme", "Düzensiz birlikler olma", "İhtiyaçlarını halktan karşılama", "TBMM'ye bağlı düzenli ordular olma", "İşgallere karşı direniş ruhu taşıma"], 
+            correct: 3, 
+            reason: "Kuvayımilliye halk direnişidir; TBMM'ye bağlı düzenli ordu sistemi daha sonra kurulmuştur." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Mustafa Kemal'in 'Siz orada sadece düşmanı değil, milletin makus talihini de yendiniz' dediği zafer hangisidir?", 
+            a: ["I. İnönü", "II. İnönü", "Sakarya", "Çanakkale", "Büyük Taarruz"], 
+            correct: 1, 
+            reason: "Bu söz II. İnönü zaferi sonrası İsmet Paşa'ya çekilen telgraftadır." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "I. Takvim-i Vekayi\nII. Tercüman-ı Ahval\nIII. İrade-i Milliye\n\nYukarıdakilerden hangileri Milli Mücadele'nin sesini dünyaya duyurmak için çıkarılan yayınlardandır?", 
+            a: ["Yalnız I", "Yalnız III", "I ve II", "II ve III", "I, II ve III"], 
+            correct: 1, 
+            reason: "İrade-i Milliye Sivas Kongresi sonrası çıkarılan mücadele gazetesidir. Diğerleri Osmanlı dönemi gazeteleridir." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Osmanlı Devleti'nde 'Nişancı'nın görevleri arasında hangisi yoktur?", 
+            a: ["Padişah tuğrasını çekmek", "Toprak kayıtlarını (Tahrir) tutmak", "Divan yazışmalarını yönetmek", "Şer'i hukuk kararlarını (Fetva) vermek", "Fermanları hazırlamak"], 
+            correct: 3, 
+            reason: "Fetva verme yetkisi dini lider olan Şeyhülislam'a aittir." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "Milli Mücadele'de TBMM'yi tanıyan ilk İtilaf devleti hangisidir?", 
+            a: ["Fransa", "İngiltere", "İtalya", "Rusya", "Ermenistan"], 
+            correct: 0, 
+            reason: "1921 Ankara Antlaşması ile Fransa, TBMM'yi tanıyan ilk İtilaf devleti olmuştur." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "Atatürk döneminde açılan 'Dil ve Tarih-Coğrafya Fakültesi' hangi yıl kurulmuştur?", 
+            a: ["1923", "1931", "1935", "1933", "1938"], 
+            correct: 2, 
+            reason: "Türk kültürünü araştırmak amacıyla 1935'te Ankara'da kurulmuştur." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "I. Dünya Savaşı'nda 'Hicaz-Yemen Cephesi'nde' gösterdiği kahramanlıktan dolayı 'Çöl Kaplanı' unvanını alan komutan kimdir?", 
+            a: ["Fahreddin Paşa", "Enver Paşa", "Cemal Paşa", "Mustafa Kemal Paşa", "Kazım Karabekir Paşa"], 
+            correct: 0, 
+            reason: "Medine müdafaasını İngilizlere karşı üstün bir dirençle yapan komutandır." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Osmanlı Devleti'nde 'Kadı'ların verdiği kararların denetlenmesi veya itiraz edilmesi durumunda başvurulan makam hangisidir?", 
+            a: ["Divan-ı Hümayun", "Şeyhülislamlık", "Nişancılık", "Reisülküttablık", "Saray"], 
+            correct: 0, 
+            reason: "Divan-ı Hümayun en üst yargı ve şikayet merciidir." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Aşağıdakilerden hangisi Milli Mücadele döneminde yayınlanan 'Amasya Genelgesi'nin özelliklerinden biri değildir?", 
+            a: ["İhtilal beyannamesi niteliği taşıması", "Milli Mücadele'nin gerekçesini belirtmesi", "Mebusan Meclisi'nin derhal toplanmasını sağlaması", "Millet egemenliğine dayalı bir yönetimin işaretini vermesi", "Kurtuluş Savaşı'nın yöntemini belirlemesi"], 
+            correct: 2, 
+            reason: "Mebusan Meclisi'nin toplanması kararı Amasya Genelgesi'nde değil, Erzurum ve Sivas Kongrelerinde vurgulanmıştır." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "Osmanlı Devleti'nde 'Yıldırım Bayezid' döneminde yapılan ve İstanbul kuşatması için hazırlık niteliği taşıyan kale hangisidir?", 
+            a: ["Rumeli Hisarı", "Anadolu Hisarı (Güzelce Hisar)", "Kilitbahir Kalesi", "Çimenlik Kalesi", "Yedikule Zindanları"], 
+            correct: 1, 
+            reason: "Anadolu Hisarı Yıldırım Bayezid, Rumeli Hisarı ise Fatih Sultan Mehmet tarafından yaptırılmıştır." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "I. Batı Trakya\nII. Elviye-i Selase (Kars, Ardahan, Batum)\nIII. Arap Toprakları\n\nMisak-ı Milli'de yukarıdaki yerlerin hangileri için 'Halk oylaması' (Referandum) yapılması öngörülmüştür?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 4, 
+            reason: "Misak-ı Milli'de halkının çoğunluğu Türk olan ve kaderi tartışmalı bu üç bölge için oylama istenmiştir." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "Aşağıdakilerden hangisi 1923 yılında açılan I. TBMM'nin özellikleri arasında yer almaz?", 
+            a: ["Kurucu meclis niteliği taşıması", "Güçler birliği ilkesini benimsemesi", "Siyasi partilerin bulunması", "Meclis hükümeti sistemini uygulaması", "Olağanüstü yetkilere sahip olması"], 
+            correct: 2, 
+            reason: "I. TBMM'de partiler değil, sadece fikir grupları (Müdafaa-i Hukuk, Yeşil Ordu vb.) vardı." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "Osmanlı Devleti'nde 'Vakıf' topraklarının gelirlerinin aşağıdakilerden hangisinde kullanılması beklenemez?", 
+            a: ["Cami ve medrese yapımı", "Darüşşifaların giderleri", "Ordunun silah ihtiyacının karşılanması", "Yolların ve köprülerin onarımı", "Aşevlerinin masrafları"], 
+            correct: 2, 
+            reason: "Vakıf gelirleri sadece sosyal ve dini hizmetlere ayrılır; askeri harcamalarda kullanılamaz." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "Aşağıdakilerden hangisi Mustafa Kemal'in 19 Mayıs 1919'da Samsun'a çıkışından sonra yayınladığı ilk belgedir?", 
+            a: ["Amasya Genelgesi", "Havza Genelgesi", "Erzurum Kongresi Kararları", "Amasya Görüşmeleri Protokolü", "Tamim-i Merkezi"], 
+            correct: 1, 
+            reason: "Samsun sonrası ilk resmi protesto ve uyandırma belgesi Havza Genelgesi'dir." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "Osmanlı Devleti'nde 'Devşirme' sistemiyle yetişenlerin devlet kademelerinde yükselmesine ne ad verilir?", 
+            a: ["İltizam", "Müsadere", "Dikey Hareketlilik", "Yatay Hareketlilik", "Vakıf Sistemi"], 
+            correct: 2, 
+            reason: "Yönetilen (reaya) sınıfından yöneten (askeri) sınıfa geçiş dikey hareketliliktir." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Cumhuriyet döneminde 'Eğitim ve öğretimin birleştirilmesi' (Tevhid-i Tedrisat) hangi temel ilke ile doğrudan ilgilidir?", 
+            a: ["Devletçilik", "Milliyetçilik", "Laiklik", "Halkçılık", "Cumhuriyetçilik"], 
+            correct: 2, 
+            reason: "Eğitimin akılcı ve laik bir yapıya büründürülmesi laiklik ilkesinin gereğidir." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "Osmanlı Devleti'nde 'II. Meşrutiyet'in' ilan edilmesinde etkili olan cemiyet hangisidir?", 
+            a: ["Vatan ve Hürriyet", "İttihat ve Terakki", "Hürriyet ve İtilaf", "Karakol Cemiyeti", "Teceddüd Fırkası"], 
+            correct: 1, 
+            reason: "İttihat ve Terakki Cemiyeti, 1908'de anayasanın tekrar yürürlüğe girmesinde kilit rol oynamıştır." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "Sivas Kongresi'nde 'Milli cemiyetlerin tek bir çatı altında birleştirilmesi' aşağıdakilerden hangisini sağlamıştır?", 
+            a: ["Saltanatın korunmasını", "Milli Mücadele'nin tek merkezden yönetilmesini", "İstanbul Hükümeti'nin otoritesinin artmasını", "Ekonomik bağımsızlığın ilanını", "Dış borçların ödenmesini"], 
+            correct: 1, 
+            reason: "Anadolu ve Rumeli Müdafaa-i Hukuk Cemiyeti ile direnişin koordinasyonu sağlanmıştır." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Osmanlı Devleti'nde 'Şeyhülislam'ın Divan toplantılarına katılması neyin göstergesidir?", 
+            a: ["Devletin teokratik (dini) bir yapıda olduğunun", "Hukuk birliğinin sağlandığının", "Eğitimin laikleştiğinin", "Padişahın yetkilerinin bittiğinin", "Ordunun güçlendiğinin"], 
+            correct: 0, 
+            reason: "Dini liderin en üst karar organında yer alması yönetimdeki dini etkinin kanıtıdır." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "Kurtuluş Savaşı'nı fiilen bitiren ateşkes antlaşması aşağıdakilerden hangisidir?", 
+            a: ["Mondros", "Mudanya", "Ankara", "Gümrü", "Lozan"], 
+            correct: 1, 
+            reason: "Mudanya Ateşkesi ile silahlı mücadele dönemi sona ermiş, diplomatik dönem başlamıştır." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "Osmanlı Devleti'nde 'Kazasker'in tuttuğu ve mahkeme kararlarının yer aldığı defterlere ne ad verilir?", 
+            a: ["Mühimme Defteri", "Şeriyye Sicili", "Tahrir Defteri", "Salname", "Tereke"], 
+            correct: 1, 
+            reason: "Kadıların verdiği tüm kararlar şeriyye sicillerine kaydedilirdi." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "Mustafa Kemal Atatürk'ün 'TBMM Başkanı' seçildiği tarih hangisidir?", 
+            a: ["19 Mayıs 1919", "23 Nisan 1920", "24 Nisan 1920", "29 Ekim 1923", "20 Ocak 1921"], 
+            correct: 2, 
+            reason: "Meclisin açılışından bir gün sonra, 24 Nisan'da yapılan oylama ile başkan seçilmiştir." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "I. Dünya Savaşı sırasında imzalanan ve İngiltere'nin Araplara bağımsızlık sözü verdiği gizli antlaşma hangisidir?", 
+            a: ["Sykes-Picot", "MacMahon", "Petrograd Protokolü", "Londra Antlaşması", "Saint-Jean-de-Maurienne"], 
+            correct: 1, 
+            reason: "İngiliz valisi MacMahon ile Şerif Hüseyin arasında yapılan gizli pazarlıktır." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "Türk Medeni Kanunu'nun (1926) kabul edilmesinin ardından aşağıdakilerden hangisi son bulmuştur?", 
+            a: ["Halifelik makamı", "Mecelle'nin uygulanması", "Aşar vergisi", "Saltanat sistemi", "Kuvayımilliye dönemi"], 
+            correct: 1, 
+            reason: "Osmanlı medeni kanunu olan Mecelle, modern Türk Medeni Kanunu ile yürürlükten kalkmıştır." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Osmanlı Devleti'nde 'Reisülküttab'ın 18. yüzyıldan itibaren 'Hariciye Nazırı' (Dışişleri Bakanı) seviyesine yükselmesinin nedeni nedir?", 
+            a: ["Eğitimdeki yenilikler", "Ordunun zayıflaması", "Diplomasinin önem kazanması ve imzalanan antlaşmaların çoğalması", "Hukuk devleti anlayışı", "Sömürgecilik faaliyetleri"], 
+            correct: 2, 
+            reason: "Savaşların yerini antlaşmaların alması bürokrasiyi ve hariciyecileri güçlendirmiştir." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "Amasya Görüşmeleri'nde Temsil Heyeti adına görüşmelere katılan isim kimdir?", 
+            a: ["Mustafa Kemal", "Kazım Karabekir", "İsmet İnönü", "Fevzi Çakmak", "Ali Fethi Okyar"], 
+            correct: 0, 
+            reason: "Temsil Heyeti başkanı olarak Mustafa Kemal, Salih Paşa ile görüşmüştür." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "Atatürk'ün 'Yurtta sulh, cihanda sulh' ilkesi doğrultusunda kurulan teşkilat hangisidir?", 
+            a: ["Birleşmiş Milletler", "Milletler Cemiyeti", "NATO", "Varşova Paktı", "Avrupa Konseyi"], 
+            correct: 1, 
+            reason: "Türkiye 1932'de dünya barışına katkı için Milletler Cemiyeti'ne üye olmuştur." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "Osmanlı Devleti'nde 'Duyun-u Umumiye'nin (Genel Borçlar İdaresi) kurulması neyin göstergesidir?", 
+            a: ["Ekonomik bağımsızlığın kaybedildiğinin", "Sanayi İnkılabı'nın gerçekleştiğinin", "Dış borçların bittiğinin", "Bütçenin fazla verdiğinin", "Vergi sisteminin adilleştiğinin"], 
+            correct: 0, 
+            reason: "Alacaklı devletlerin Osmanlı bütçesine el koyması ekonomik egemenliği zedelemiştir." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Milli Mücadele döneminde Batı Cephesi'nde Yunanlılara karşı yapılan 'Büyük Taarruz'un zaferle sonuçlandığı gün hangisidir?", 
+            a: ["26 Ağustos", "30 Ağustos", "9 Eylül", "11 Ekim", "24 Temmuz"], 
+            correct: 1, 
+            reason: "30 Ağustos günü Başkomutanlık Meydan Muharebesi ile kesin zafer kazanılmıştır." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Aşağıdakilerden hangisi Osmanlı Devleti'nde 'Merkezi Otorite'yi güçlendirmeye yönelik bir uygulamadır?", 
+            a: ["Vakıf sisteminin yaygınlaşması", "Enderun Mektebi'nin açılması", "Sancak sisteminin kaldırılması", "Ayanlara haklar verilmesi", "Müsadere sisteminin getirilmesi"], 
+            correct: 4, 
+            reason: "Müsadere, güçlü ailelerin zenginleşerek devlete rakip olmasını engellediği için otoriteyi artırır." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "I. Balkan Savaşı'nda Osmanlı Devleti'nin 'Edirne ve Kırklareli'yi' kaybettiği antlaşma hangisidir?", 
+            a: ["Londra", "Bükreş", "İstanbul", "Uşi", "Paris"], 
+            correct: 0, 
+            reason: "1913 Londra Antlaşması ile Doğu Trakya toprakları elden çıkmıştır." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "Mustafa Kemal'e 'Mareşallik' rütbesi hangi savaştan sonra verilmiştir?", 
+            a: ["Sakarya Meydan Muharebesi", "Büyük Taarruz", "I. İnönü", "Çanakkale", "Trablusgarp"], 
+            correct: 0, 
+            reason: "22 gün süren destansı Sakarya zaferinden sonra TBMM tarafından tevcih edilmiştir." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "Osmanlı Devleti'nde 'Padişah'ın yetkilerinin halkın temsilcileriyle paylaşıldığı ilk dönem hangisidir?", 
+            a: ["Tanzimat Dönemi", "I. Meşrutiyet", "II. Meşrutiyet", "Lale Devri", "Cumhuriyet"], 
+            correct: 1, 
+            reason: "1876 yılında Kanun-i Esasi'nin ilanıyla Mebusan Meclisi açılarak halk yönetime katılmıştır." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "Osmanlı Devleti'nde 'Sancak Sistemi'nin kaldırılmasının temel olumsuz sonucu aşağıdakilerden hangisidir?", 
+            a: ["Merkezi otoritenin güçlenmesi", "Şehzadelerin devlet yönetiminde tecrübesiz kalması", "Taht kavgalarının tamamen bitmesi", "Ordunun zayıflaması", "Eğitimin bozulması"], 
+            correct: 1, 
+            reason: "Sancak yerine kafes sistemine geçilmesi, şehzadelerin halktan ve yönetim pratiğinden uzak kalmasına yol açmıştır." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "I. Dünya Savaşı'ndan sonra toplanan 'Paris Barış Konferansı'nda' İzmir ve çevresinin Yunanistan'a verilmesi hangi devletin tepkisine neden olmuştur?", 
+            a: ["Fransa", "İtalya", "Rusya", "ABD", "Japonya"], 
+            correct: 1, 
+            reason: "Gizli antlaşmalarla kendisine söz verilen İzmir'in Yunanlılara verilmesi, İtalya'nın İtilaf grubundan kopmaya başlamasına neden olmuştur." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "Osmanlı Devleti'nde 'Toprakların (Miri) mülkiyetinin devlete ait olması' aşağıdakilerden hangisini zorunlu kılmıştır?", 
+            a: ["Özel mülkiyetin gelişmesini", "Toprakların miras bırakılamamasını (kullanım hakkı hariç)", "Vergi alınmamasını", "Köylünün toprağı terk etmesini", "Ticaretin durmasını"], 
+            correct: 1, 
+            reason: "Mülkiyet devlette olduğu için köylü sadece kullanım hakkına (tasarruf) sahiptir, toprağı satamaz veya devredemez." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Aşağıdakilerden hangisi Atatürk'ün 'Halkçılık' ilkesi doğrultusunda yapılan çalışmalardan biridir?", 
+            a: ["Aşar vergisinin kaldırılması", "Kabotaj Kanunu", "Türk Tarih Kurumu'nun kurulması", "Beş yıllık kalkınma planı", "Sadabat Paktı"], 
+            correct: 0, 
+            reason: "Köylü üzerindeki ağır bir yükün kaldırılması toplumsal adalet ve halkçılık gereğidir." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "Osmanlı Devleti'nde 'II. Meşrutiyet' döneminde kurulan ilk siyasi parti hangisidir?", 
+            a: ["İttihat ve Terakki Fırkası", "Hürriyet ve İtilaf Fırkası", "Ahrar Fırkası", "Osmanlı Demokrat Fırkası", "Teceddüd Fırkası"], 
+            correct: 2, 
+            reason: "1908'de kurulan Ahrar Fırkası, Osmanlı'nın ilk muhalefet partisi/fırkası sayılır." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "Sivas Kongresi'nde 'Manda ve Himaye' fikrinin bir daha gündeme gelmemek üzere reddedilmesi neyi pekiştirmiştir?", 
+            a: ["Milli bağımsızlık düşüncesini", "Padişaha bağlılığı", "Bölgesel kurtuluş fikrini", "Ekonomik devletçiliği", "İstanbul Hükümeti ile iş birliğini"], 
+            correct: 0, 
+            reason: "Manda reddi 'Ya istiklal ya ölüm' parolasının kesinleşmesidir." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Osmanlı Devleti'nde 'Kazasker' olabilmenin temel şartı aşağıdakilerden hangisidir?", 
+            a: ["Soyluluk", "Müslüman ve medrese çıkışlı (İlmiye sınıfından) olmak", "Devşirme olmak", "Askeri kökenli olmak", "Sancak beyi olmak"], 
+            correct: 1, 
+            reason: "Kazaskerlik yüksek bir ilmiye makamıdır, dolayısıyla medrese eğitimi şarttır." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "Milli Mücadele'de Batı Cephesi'ndeki Yunan ilerleyişine karşı kurulan savunma hattına ne ad verilir?", 
+            a: ["Milne Hattı", "Kars Hattı", "Ankara Hattı", "Mudanya Hattı", "Lozan Hattı"], 
+            correct: 0, 
+            reason: "General Milne tarafından belirlenen ve Yunan işgalini sınırlayan hattır." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "Osmanlı Devleti'nde 'Şeyhülislam'ın Divan-ı Hümayun'da aldığı kararlara ne ad verilir?", 
+            a: ["Ferman", "Berat", "Fetva", "Hüküm", "Buyruldu"], 
+            correct: 2, 
+            reason: "Fetva, alınan kararların dine uygunluğunu belirten belgedir." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "I. Dünya Savaşı'nda Osmanlı Devleti'nin 'Kafkas Cephesi'ni' açmasındaki temel amaç nedir?", 
+            a: ["Süveyş Kanalı'nı ele geçirmek", "Rusları Anadolu'dan atmak ve Orta Asya Türkleri ile birleşmek (Turan)", "İngiliz sömürge yollarını kesmek", "Fransızları durdurmak", "Balkanları geri almak"], 
+            correct: 1, 
+            reason: "Enver Paşa'nın Turancılık ideali doğrultusunda açılan bir taarruz cephesidir." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Mustafa Kemal Atatürk'ün 'Nutuk' adlı eserinin satış geliri hangi kuruma bırakılmıştır?", 
+            a: ["Türk Tarih Kurumu", "Türk Dil Kurumu", "Türk Hava Kurumu (Tayyare Cemiyeti)", "Kızılay", "Çocuk Esirgeme Kurumu"], 
+            correct: 2, 
+            reason: "Atatürk, eserinin gelirini o dönemki adıyla Tayyare Cemiyeti'ne bağışlamıştır." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "Türkiye'nin 'Milletler Cemiyeti'ndeki' ilk temsilcisi kimdir?", 
+            a: ["İsmet İnönü", "Cemal Hüsnü Taray", "Tevfik Rüştü Aras", "Rauf Orbay", "Ali Fethi Okyar"], 
+            correct: 1, 
+            reason: "1932 yılında cemiyete üye olduktan sonra ilk temsilcimiz Cemal Hüsnü Taray olmuştur." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Osmanlı Devleti'nde 'Reisülküttab' hangi yüzyıldan itibaren Nişancı'dan ayrılarak hariciye işlerini yürütmeye başlamıştır?", 
+            a: ["16. Yüzyıl", "17. Yüzyıl", "18. Yüzyıl", "19. Yüzyıl", "20. Yüzyıl"], 
+            correct: 2, 
+            reason: "Diplomatik faaliyetlerin zirve yaptığı 18. yüzyılda müstakil bir dışişleri birimi haline gelmiştir." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "Erzurum Kongresi'nde oluşturulan 'Temsil Heyeti'nin' görevi nerede sona ermiştir?", 
+            a: ["Sivas Kongresi'nde", "TBMM'nin açılmasıyla", "Cumhuriyetin ilanıyla", "Lozan Antlaşması'yla", "Saltanatın kaldırılmasıyla"], 
+            correct: 1, 
+            reason: "23 Nisan 1920'de meclis açılınca Temsil Heyeti'nin yürütme yetkisi ve görevi meclise geçmiştir." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "I. Balkan Antantı\nII. Sadabat Paktı\nIII. Montrö Boğazlar Sözleşmesi\n\nYukarıdakilerden hangileri Türkiye'nin 'Batı' sınırlarını güvence altına almaya yöneliktir?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 0, 
+            reason: "Balkan Antantı Batı sınırı, Sadabat Paktı ise Doğu-Güney sınırları güvenliği içindir." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "I. Dünya Savaşı'nda Osmanlı Devleti'nin 'savunma' cepheleri arasında hangisi yer almaz?", 
+            a: ["Çanakkale", "Irak", "Suriye-Filistin", "Hicaz-Yemen", "Kanal"], 
+            correct: 4, 
+            reason: "Kanal Cephesi Osmanlı'nın taarruz (saldırı) cephesidir." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Osmanlı Devleti'nde 'Esnaf' teşkilatına üye olan dükkan açma hakkına (ruhsat) ne ad verilir?", 
+            a: ["Gedik", "Narh", "Menzil", "İltizam", "Müsadere"], 
+            correct: 0, 
+            reason: "Gedik, bir ustanın dükkan açma ve mesleğini icra etme yetki belgesidir." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Amasya Genelgesi'nde yer alan 'Milletin bağımsızlığını yine milletin azim ve kararı kurtaracaktır.' maddesi hangi kavramın ilk kez resmiyet kazandığını gösterir?", 
+            a: ["Manda yönetimi", "Milli egemenlik", "Saltanatın üstünlüğü", "Dini yönetim", "Dış yardım"], 
+            correct: 1, 
+            reason: "Halkın kararına vurgu yapılması, milli irade ve egemenliğin temelidir." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "Osmanlı Devleti'nde 'Vakıf' yöneticilerine ne ad verilir?", 
+            a: ["Mütevelli", "Müderris", "Kassım", "Muhtesip", "Mültezim"], 
+            correct: 0, 
+            reason: "Vakıf işlerini yürüten ve denetleyen idari sorumluya mütevelli denir." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "I. İnönü Zaferi'nden sonra TBMM'nin 'Afganistan' ile dostluk antlaşması imzalaması neyin göstergesidir?", 
+            a: ["Müslüman bir devletin TBMM'yi tanıdığının", "Savaşın bittiğinin", "Rusya ile ilişkilerin bozulduğunun", "İngiltere'nin baskısının azaldığının", "Yeni bir cephe açıldığının"], 
+            correct: 0, 
+            reason: "Afganistan, TBMM'nin varlığını tanıyan ilk Müslüman devlettir." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "Aşağıdakilerden hangisi 1924 Anayasası'nda yer alan temel ilkelerden biridir?", 
+            a: ["Güçler birliği", "Başkanlık sistemi", "Çok dereceli seçim", "Eyalet sistemi", "Çift meclisli yapı"], 
+            correct: 0, 
+            reason: "1924 anayasasında yasama ve yürütme yetkisi mecliste toplanmıştır (Güçler birliği)." 
+        },
+        { 
+            y: "2010 - KPSS",
+            q: "Osmanlı Devleti'nde 'Devlet işlerinin görüşüldüğü en üst kurul' hangisidir?", 
+            a: ["Divan-ı Hümayun", "Kurultay", "Toy", "Şura", "Meclis-i Ayan"], 
+            correct: 0, 
+            reason: "Merkezi yönetimde tüm önemli siyasi ve hukuki kararların alındığı divandır." 
+        },
+        { 
+            y: "2009 - KPSS",
+            q: "I. Amasya Genelgesi\nII. Erzurum Kongresi\nIII. Sivas Kongresi\n\nYukarıdakilerden hangilerinde 'Temsil Heyeti' fikri ilk kez ortaya atılmıştır?", 
+            a: ["Yalnız I", "I ve II", "I ve III", "II ve III", "I, II ve III"], 
+            correct: 0, 
+            reason: "Fikir olarak Amasya'da 'Milli bir kurul oluşturulmalıdır' şeklinde belirtilmiştir." 
+        },
+        { 
+            y: "2008 - KPSS",
+            q: "Osmanlı Devleti'nde 'Kaptan-ı Derya' hangi padişah döneminden itibaren Divan üyesi olmuştur?", 
+            a: ["Kanuni Sultan Süleyman", "Fatih Sultan Mehmet", "Yavuz Sultan Selim", "II. Selim", "I. Ahmed"], 
+            correct: 0, 
+            reason: "Barbaros Hayrettin Paşa'nın görevlendirilmesiyle birlikte deniz kuvvetleri divanda temsil edilmeye başlanmıştır." 
+        },
+        { 
+            y: "2007 - KPSS",
+            q: "Aşağıdakilerden hangisi Atatürk'ün 'Milliyetçilik' ilkesinin bir sonucudur?", 
+            a: ["Türk Dil Kurumu'nun kurulması", "Aşar vergisinin kaldırılması", "Tekke ve Zaviyelerin kapatılması", "Sümerbank'ın açılması", "Kadınlara haklar verilmesi"], 
+            correct: 0, 
+            reason: "Milli kültürün geliştirilmesi milliyetçilik ilkesinin temelidir." 
+        },
+        { 
+            y: "2006 - KPSS",
+            q: "Osmanlı Devleti'nde 'Lale Devri'nde' Avrupa'ya ilk kez 'geçici elçilikler' açılmasının amacı nedir?", 
+            a: ["Avrupa'daki teknik ve kültürel gelişmeleri yakından takip etmek", "Yeni topraklar almak", "Hristiyanlığı tanımak", "Dış borç bulmak", "Askeri ittifak kurmak"], 
+            correct: 0, 
+            reason: "Osmanlı, Avrupa üstünlüğünü kabul ederek batıdaki yenilikleri gözlemlemek istemiştir." 
+        },
+        { 
+            y: "2005 - KPSS",
+            q: "Erzurum Kongresi'nin toplanma amacı nedir?", 
+            a: ["Doğu Anadolu'daki Ermeni tehdidine karşı önlem almak", "Yeni bir devlet kurmak", "Saltanatı kaldırmak", "Rusya ile antlaşma yapmak", "Halkı askere almak"], 
+            correct: 0, 
+            reason: "Bölgesel bir kongre olarak Doğu'daki işgal tehlikesine karşı toplanmıştır." 
+        },
+        { 
+            y: "2004 - KPSS",
+            q: "Osmanlı Devleti'nde 'Nişancı'nın görevleri arasında aşağıdakilerden hangisi yoktur?", 
+            a: ["Padişah tuğrasını çekmek", "Toprak kayıtlarını tutmak", "Divan yazışmalarını yönetmek", "Şer'i davalara bakmak", "Fermanları hazırlamak"], 
+            correct: 3, 
+            reason: "Şer'i davalara Kazasker veya Kadılar bakar." 
+        },
+        { 
+            y: "2003 - KPSS",
+            q: "Milli Mücadele'de 'Doğu Cephesi' hangi antlaşma ile kapanmıştır?", 
+            a: ["Gümrü Antlaşması", "Moskova Antlaşması", "Kars Antlaşması", "Ankara Antlaşması", "Lozan Antlaşması"], 
+            correct: 0, 
+            reason: "3 Aralık 1920'de Ermenistan ile imzalanan antlaşma ile ilk askeri ve siyasi zafer alınmıştır." 
+        },
+        { 
+            y: "2023 - KPSS",
+            q: "Osmanlı Devleti'de 'Reaya' sınıfından 'Askeri' sınıfa geçiş aşağıdakilerden hangisiyle mümkündür?", 
+            a: ["Eğitim (Medrese/Enderun) ve liyakatle", "Zenginleşmekle", "Sadece soylu olmakla", "Babadan miras yoluyla", "Askerden kaçmakla"], 
+            correct: 0, 
+            reason: "Osmanlı'da yetenekli ve eğitimli bireyler için sosyal hareketlilik (dikey) her zaman açıktı." 
+        },
+        { 
+            y: "2022 - KPSS",
+            q: "Mustafa Kemal Atatürk'ün 'Anafartalar Kahramanı' unvanını aldığı cephe hangisidir?", 
+            a: ["Çanakkale Cephesi", "Kafkas Cephesi", "Suriye Cephesi", "Kanal Cephesi", "Hicaz Cephesi"], 
+            correct: 0, 
+            reason: "Çanakkale savaşlarındaki efsanevi direnişi ile bu unvanı almıştır." 
+        },
+        { 
+            y: "2021 - KPSS",
+            q: "Cumhuriyet döneminde 'Kabotaj Kanunu' (1926) ile aşağıdakilerden hangisi amaçlanmıştır?", 
+            a: ["Denizlerdeki ticaret hakkını Türk vatandaşlarına vererek ekonomik bağımsızlığı sağlamak", "Balıkçılığı yasaklamak", "Yabancı gemilere vergi indirimi yapmak", "Yeni limanlar inşa etmek", "Askeri donanmayı terhis etmek"], 
+            correct: 0, 
+            reason: "Milli karasularında bağımsızlık ve egemenlik sağlanmıştır." 
+        },
+        { 
+            y: "2020 - KPSS",
+            q: "Aşağıdakilerden hangisi 1925 yılında kabul edilen 'Takrir-i Sükun Kanunu'nun' çıkarılma nedenidir?", 
+            a: ["Şeyh Sait İsyanı ve bozulan asayişi düzeltmek", "Seçimleri yenilemek", "Cumhuriyeti ilan etmek", "Harf inkılabını yapmak", "Ekonomik krizi önlemek"], 
+            correct: 0, 
+            reason: "İsyan sonrası rejimi korumak ve güvenliği sağlamak için olağanüstü yetkiler getiren kanundur." 
+        },
+        { 
+            y: "2019 - KPSS",
+            q: "Osmanlı Devleti'nde 'Kazasker'in yardımcısına ne ad verilir?", 
+            a: ["Mültezim", "Kassım", "Naib", "Subaşı", "Muhtesip"], 
+            correct: 1, 
+            reason: "Kassımlar, miras paylaşımı gibi konularda kazaskere bağlı çalışan görevlilerdir." 
+        },
+        { 
+            y: "2018 - KPSS",
+            q: "Misak-ı Milli sınırları içinde yer alan 'Musul' hangi yıl imzalanan antlaşma ile kesin olarak Türkiye sınırları dışında kalmıştır?", 
+            a: ["1923 Lozan", "1926 Ankara Antlaşması", "1921 Ankara Antlaşması", "1939 Hatay'ın Katılımı", "1918 Mondros"], 
+            correct: 1, 
+            reason: "İngiltere ile yapılan ikili görüşmeler sonucunda Musul, 1926'da Irak'a bırakılmıştır." 
+        },
+        { 
+            y: "2017 - KPSS",
+            q: "Mustafa Kemal'in 'Ordular, ilk hedefiniz Akdeniz'dir. İleri!' emrini verdiği Büyük Taarruz ne zaman başlamıştır?", 
+            a: ["26 Ağustos 1922", "30 Ağustos 1922", "9 Eylül 1922", "11 Ekim 1922", "15 Mayıs 1919"], 
+            correct: 0, 
+            reason: "26 Ağustos sabaha karşı Kocatepe'den topçu ateşiyle başlamıştır." 
+        },
+        { 
+            y: "2016 - KPSS",
+            q: "Osmanlı Devleti'nde 'Nizam-ı Cedid' ıslahatlarını yapan padişah hangisidir?", 
+            a: ["III. Selim", "II. Mahmut", "I. Abdülhamid", "III. Mustafa", "II. Abdülhamid"], 
+            correct: 0, 
+            reason: "III. Selim, Batılı tarzda ilk sistemli orduyu ve yenilik hareketini başlatmıştır." 
+        },
+        { 
+            y: "2015 - KPSS",
+            q: "Aşağıdakilerden hangisi Milli Mücadele'nin 'Hukuki' temelini oluşturan belgedir?", 
+            a: ["Misak-ı Milli", "Amasya Genelgesi", "Sivas Kongresi", "Mudanya Ateşkesi", "Lozan Barış Antlaşması"], 
+            correct: 0, 
+            reason: "Kurtuluş Savaşı'nın sınırlarını ve bağımsızlık şartlarını belirleyen ulusal ant belgesidir." 
+        },
+        { 
+            y: "2014 - KPSS",
+            q: "Osmanlı Devleti'de 'Miri Toprak' türlerinden olan 'Malikane' sisteminin amacı nedir?", 
+            a: ["Devlet adamlarına üstün hizmetleri karşılığında ömür boyu toprak verilmesi", "Gelirinin halka dağıtılması", "Sadece asker yetiştirilmesi", "Hazine açıklarının kapatılması", "Dış borç ödenmesi"], 
+            correct: 0, 
+            reason: "Liyakatli devlet adamlarını ödüllendirmek amacıyla uygulanan bir toprak sistemidir." 
+        },
+        { 
+            y: "2013 - KPSS",
+            q: "TBMM'yi tanıyan 'ilk İtilaf devleti' hangisidir?", 
+            a: ["Fransa", "İngiltere", "İtalya", "Yunanistan", "Rusya"], 
+            correct: 0, 
+            reason: "1921 Ankara Antlaşması ile Fransa TBMM'yi resmen tanımıştır." 
+        },
+        { 
+            y: "2012 - KPSS",
+            q: "I. Balkan Savaşı sonucunda Osmanlı Devleti'nin kaybettiği yerler arasında hangisi yoktur?", 
+            a: ["Edirne", "Selanik", "Girit", "Kırklareli", "Manastır"], 
+            correct: 2, 
+            reason: "Girit, II. Meşrutiyet ilanı (1908) sırasındaki kargaşada Yunanistan'a katılmıştır; I. Balkan'da değil." 
+        },
+        { 
+            y: "2011 - KPSS",
+            q: "Cumhuriyet döneminde 'Harf İnkılabı' (1928) neden yapılmıştır?", 
+            a: ["Okuma-yazma oranını artırmak ve eğitimi kolaylaştırmak", "Sadece batıya benzemek için", "Eski kitapları yok etmek için", "Dini eğitimi yasaklamak için", "Yabancı dil öğretmek için"], 
+            correct: 0, 
+            reason: "Yeni Türk alfabesi, Türkçenin yapısına daha uygun olduğu için okullaşmayı hızlandırmıştır." 
+        }
+    ];
+
+    let currentIdx = 0;
+    let queue = [];
+    let errorCount = 0;
+    let selectedIdx = null;
+
+    function renderQuestion() {
+        if (currentIdx >= questionsList.length) {
+            if (queue.length > 0) {
+                questionsList.push(queue.shift());
+                renderQuestion(); 
+            } else {
+                document.getElementById('quiz-container').innerHTML = "<div id='video-title-container'><h1 class='video-title'>Sınav Tamamlandı!</h1></div><p style='text-align:center;font-size:1.2rem;color:#1e3a8a;'>Tebrikler, 267 adet çıkmış tarih sorusunu eksiksiz ve yıl bilgileriyle tamamladın.</p>";
+            }
+            return;
+        }
+        
+        const q = questionsList[currentIdx];
+        document.getElementById('year-info').innerText = q.y;
+        document.getElementById('question-text').innerText = (currentIdx + 1) + ". " + q.q;
+        
+        document.getElementById('current-q-count').innerText = (currentIdx + 1);
+        document.getElementById('hata-count').innerText = errorCount;
+
+        const optionsDiv = document.getElementById('options-container');
+        optionsDiv.innerHTML = '';
+        q.a.forEach((opt, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'option';
+            btn.innerText = opt;
+            btn.onclick = () => {
+                document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedIdx = idx;
+                document.getElementById('feedback-area').style.display = 'none';
+            };
+            optionsDiv.appendChild(btn);
+        });
+        document.getElementById('check-btn').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('feedback-area').style.display = 'none';
+        selectedIdx = null;
+    }
+
+    function checkAnswer() {
+        if (selectedIdx === null) return;
+        const q = questionsList[currentIdx];
+        const feedback = document.getElementById('feedback-area');
+        
+        if (selectedIdx === q.correct) {
+            feedback.innerText = "Doğru! " + q.reason;
+            feedback.className = "correct";
+        } else {
+            errorCount++;
+            document.getElementById('hata-count').innerText = errorCount;
+            feedback.innerText = "Yanlış! Doğrusu: " + q.a[q.correct] + ". " + q.reason;
+            feedback.className = "wrong";
+            queue.push(q, q, q); // Spaced Repetition (3 Tekrar)
+        }
+        
+        document.getElementById('check-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'block';
+        feedback.style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentIdx++;
+        renderQuestion();
+    }
+
+    renderQuestion();
+</script>
+</body>
+</html>
